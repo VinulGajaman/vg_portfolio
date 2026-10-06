@@ -44,7 +44,7 @@ function PixelCross({ className }: { className?: string }) {
 /** Fitted wordmark (§1.3.1) with hand-split chars so the intro can mask them per line. */
 function HeroWordmark() {
   const word = (w: string, sparkle = false) => (
-    <span className="-my-[.12em] block overflow-hidden py-[.12em] [perspective:1000px] md:inline-block">
+    <span className="-my-[.12em] inline-block overflow-hidden py-[.12em] [perspective:1000px]">
       {Array.from(w).map((c, i) => (
         <span key={i} data-wm-char="" className="inline-block origin-[50%_100%]">
           {c}
@@ -62,11 +62,11 @@ function HeroWordmark() {
   return (
     <div aria-hidden className="w-full [container-type:inline-size]">
       <p
-        className="type-display-wordmark m-0 whitespace-nowrap [--wm-k:5.77] md:[--wm-k:8.93]"
+        className="type-display-wordmark m-0 whitespace-nowrap [--wm-k:8.93]"
         style={{ fontSize: "calc(100cqw / var(--wm-k))" }}
       >
         {word(hero.wordmarkLines[0])}
-        <span className="hidden md:inline"> </span>
+        <span> </span>
         {word(hero.wordmarkLines[1], true)}
       </p>
     </div>

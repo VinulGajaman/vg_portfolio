@@ -1,0 +1,920 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   DESIGN.md §7.3 theme + §1 (colour, type, radii) + §2.1 (every easing token)
+   ========================================================================== */
+
+@theme {
+  --breakpoint-*: initial;
+  --breakpoint-md: 50.625rem; /* 810px  tablet  */
+  --breakpoint-lg: 75rem; /* 1200px desktop */
+
+  --color-canvas: #0d0d0d;
+  --color-canvas-deep: #0a0a0a;
+  --color-placeholder: #161515;
+  --color-surface: #232222;
+  --color-surface-70: rgb(35 34 34 / 0.7);
+  --color-surface-2: #282727;
+  --color-surface-3: #303030;
+  --color-surface-btn: #2f2e2d;
+  --color-line: #3c3c3c;
+  --color-ink: #ffffff;
+  --color-ink-soft: #bdbdbd;
+  --color-ink-faint: #999999;
+  --color-accent: #f65802;
+  --color-accent-85: rgb(246 88 2 / 0.85);
+  --color-accent-ink: #0d0d0d;
+  --color-glass: rgb(255 255 255 / 0.2);
+  --color-glass-hover: rgb(255 255 255 / 0.3);
+  --color-tag: rgb(255 255 255 / 0.1);
+  --color-faint: rgb(255 255 255 / 0.05);
+  --color-backdrop: rgb(0 0 0 / 0.25);
+  --color-error: #ff2244;
+  --color-error-bg: rgb(255 34 68 / 0.15);
+
+  --font-display: var(--font-clash), "Clash Display", Arial, sans-serif;
+  --font-sans: var(--font-inter), Inter, Arial, sans-serif;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
+  --radius-pill: 100px;
+
+  /* Cubic-bezier tokens (§2.1) */
+  --ease-portvio: cubic-bezier(0.44, 0, 0.56, 1);
+  --ease-mask: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --ease-roll: cubic-bezier(0.42, 0, 0.58, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-expo-in-out: cubic-bezier(0.87, 0, 0.13, 1);
+
+  /* Exact zero-bounce Framer springs as linear() curves (§2.1) */
+  --ease-spring-hero: linear(0, 0.0624, 0.1884, 0.3303, 0.4648, 0.582, 0.679, 0.7567, 0.8175, 0.8643, 0.8997, 0.9264, 0.9458, 0.9606, 0.9714, 0.9794, 0.9851, 0.9893, 0.9923, 0.9945, 0.9961, 0.9972, 0.998, 0.9986, 1);
+  --ease-spring-reveal: linear(0, 0.0609, 0.188, 0.3287, 0.4624, 0.579, 0.6777, 0.7551, 0.8159, 0.8636, 0.899, 0.9257, 0.9456, 0.9606, 0.9714, 0.9793, 0.9851, 0.9893, 0.9923, 0.9945, 0.9961, 0.9972, 0.998, 0.9986, 1);
+  --ease-spring-layout: linear(0, 0.0647, 0.189, 0.3327, 0.4685, 0.5863, 0.6809, 0.759, 0.8198, 0.8653, 0.9008, 0.9274, 0.9471, 0.9613, 0.972, 0.9799, 0.9854, 0.9895, 0.9925, 0.9946, 0.9962, 0.9973, 0.9981, 0.9986, 1);
+  --ease-spring-ui: linear(0, 0.0686, 0.2069, 0.3534, 0.4894, 0.6058, 0.704, 0.7782, 0.8355, 0.879, 0.9127, 0.9365, 0.9541, 0.9669, 0.9766, 0.9832, 0.988, 0.9915, 0.994, 0.9957, 0.997, 0.9979, 0.9985, 0.9989, 1);
+  --ease-spring-fade: linear(0, 0.0767, 0.226, 0.3777, 0.5225, 0.6369, 0.7328, 0.8027, 0.8557, 0.8971, 0.9258, 0.9477, 0.9626, 0.9734, 0.9815, 0.9869, 0.9909, 0.9936, 0.9956, 0.9969, 0.9978, 0.9985, 0.9989, 0.9993, 1);
+  --ease-spring-snappy: linear(0, 0.077, 0.2184, 0.3893, 0.5428, 0.6821, 0.7871, 0.8707, 0.9268, 0.9666, 0.9902, 1.0045, 1.0111, 1.0135, 1.0132, 1.0114, 1.0093, 1.007, 1.0051, 1.0034, 1.0022, 1.0013, 1.0007, 1.0002, 1);
+  --ease-spring-card: linear(0, 0.23, 0.4241, 0.568, 0.6769, 0.7576, 0.8187, 0.864, 0.8983, 0.9237, 0.9429, 0.9572, 0.9679, 0.976, 0.982, 0.9865, 0.9899, 0.9924, 0.9943, 0.9958, 0.9968, 0.9976, 0.9982, 0.9987, 1);
+
+  /* Matching durations (§2.1 / §2.3) */
+  --dur-press: 100ms;
+  --dur-hover: 180ms;
+  --dur-colour: 200ms;
+  --dur-spring-hero: 1.007s;
+  --dur-spring-reveal: 1.207s;
+  --dur-spring-layout: 0.809s;
+  --dur-spring-ui: 0.63s;
+  --dur-spring-fade: 0.442s;
+  --dur-spring-snappy: 0.42s;
+  --dur-spring-card: 2.243s;
+
+  --animate-grain: grain 0.8s steps(6) infinite;
+  --animate-shimmer: shimmer 2.8s ease-in-out infinite;
+  --animate-breathe: breathe 6s ease-in-out infinite alternate;
+  --animate-spin-1s: spin 1s linear infinite;
+  --animate-pulse-ring: pulse-ring 1.6s var(--ease-out) infinite;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+/* Portvio's Clash fallback metrics (§1.3) */
+@font-face {
+  font-family: "Clash Display Fallback";
+  src: local("Arial");
+  ascent-override: 83.42%;
+  descent-override: 23.43%;
+  line-gap-override: 8.44%;
+  size-adjust: 106.69%;
+}
+
+@layer base {
+:root {
+  --gutter: 16px;
+  --wm-k: 5.77; /* wordmark fit constant, phone (two lines) §1.3.1 */
+  color-scheme: dark;
+}
+@media (width >= 50.625rem) {
+  :root {
+    --gutter: 20px;
+    --wm-k: 8.93;
+  }
+}
+
+html {
+  background: var(--color-canvas);
+  scrollbar-color: #3c3c3c #0d0d0d;
+  scrollbar-width: thin;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  caret-color: #f65802;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #f65802;
+  color: #0d0d0d;
+}
+
+a {
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+:focus-visible {
+  outline: 2px solid #f65802;
+  outline-offset: 3px;
+}
+
+}
+
+/* Lenis (lenis/dist/lenis.css, inlined) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+.lenis.lenis-autoToggle {
+  transition-property: overflow;
+  transition-duration: 1ms;
+  transition-behavior: allow-discrete;
+}
+
+@layer components {
+/* Press feedback (§2.4): every pressable element */
+.pressable {
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+}
+
+/* ==========================================================================
+   No-flash rule (§2.4). html.js is added by an inline <head> script.
+   Without JS everything stays visible.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal] {
+    opacity: 0;
+  }
+  html.js [data-reveal-text] {
+    visibility: hidden;
+  }
+  html.js [data-intro] {
+    opacity: 0;
+  }
+}
+
+/* Preloader: only when JS runs and the session has not seen it (§2.5). */
+.preloader {
+  display: none;
+}
+html.js:not(.no-preloader) .preloader {
+  display: block;
+}
+
+/* Native cursor hidden inside "view" and "play" targets while the custom cursor runs. */
+html.has-cursor [data-cursor="view"],
+html.has-cursor [data-cursor="view"] *,
+html.has-cursor [data-cursor="play"],
+html.has-cursor [data-cursor="play"] * {
+  cursor: none;
+}
+
+/* ==========================================================================
+   Type scale (§1.3). Desktop ≥1200 / Tablet 810–1199 / Phone <810.
+   ========================================================================== */
+
+@utility type-h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  text-wrap: balance;
+  @media (width >= 50.625rem) {
+    font-size: 42px;
+  }
+  @media (width >= 75rem) {
+    font-size: 48px;
+  }
+}
+
+@utility type-menu-link {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 54px;
+  line-height: 1;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+@utility type-number {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  @media (width >= 50.625rem) {
+    font-size: 32px;
+  }
+  @media (width >= 75rem) {
+    font-size: 36px;
+  }
+}
+
+@utility type-display-counter {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(64px, 10vw, 160px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility type-display-impact {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(56px, 6.5vw, 96px);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility type-display-wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+@utility type-statement {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1.3;
+  text-transform: uppercase;
+  text-wrap: balance;
+  @media (width >= 50.625rem) {
+    font-size: 28px;
+  }
+  @media (width >= 75rem) {
+    font-size: 32px;
+  }
+}
+
+@utility type-lead {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+  @media (width >= 50.625rem) {
+    font-size: 17px;
+  }
+  @media (width >= 75rem) {
+    font-size: 20px;
+  }
+}
+
+@utility type-ui {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 1.48;
+  letter-spacing: 0;
+}
+
+@utility type-link {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1;
+}
+
+@utility type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+
+@utility type-tag {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+@utility type-small {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.28;
+  letter-spacing: 0;
+}
+
+@utility type-micro {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility type-input {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility measure {
+  max-width: 62ch;
+}
+
+/* ==========================================================================
+   Layout utilities (§1.4)
+   ========================================================================== */
+
+@utility container-site {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+@utility container-narrow {
+  width: 100%;
+  max-width: 600px;
+  margin-inline: auto;
+  @media (width >= 50.625rem) {
+    max-width: 960px;
+  }
+}
+
+/* Section padding 60/20 · 80/20 · 100/40 */
+@utility section-pad {
+  padding-top: 60px;
+  padding-bottom: 20px;
+  @media (width >= 50.625rem) {
+    padding-top: 80px;
+    padding-bottom: 20px;
+  }
+  @media (width >= 75rem) {
+    padding-top: 100px;
+    padding-bottom: 40px;
+  }
+}
+
+/* Heavy bottom (impact, experience, contact) 80 / 100 / 140 */
+@utility section-pad-heavy {
+  padding-bottom: 80px;
+  @media (width >= 50.625rem) {
+    padding-bottom: 100px;
+  }
+  @media (width >= 75rem) {
+    padding-bottom: 140px;
+  }
+}
+
+/* Heading → content gap 30 / 40 / 50 */
+@utility heading-gap {
+  margin-bottom: 30px;
+  @media (width >= 50.625rem) {
+    margin-bottom: 40px;
+  }
+  @media (width >= 75rem) {
+    margin-bottom: 50px;
+  }
+}
+
+/* Every section after the hero slides over it (§3.2) */
+@utility section-layer {
+  position: relative;
+  z-index: 2;
+  background: var(--color-canvas);
+}
+
+/* Borders as ::after overlays (§1.5); never change layout */
+@utility border-overlay {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid var(--color-line);
+    pointer-events: none;
+  }
+}
+@utility border-overlay-glass {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid rgb(255 255 255 / 0.3);
+    pointer-events: none;
+  }
+}
+
+/* Edge light on every surface card (§1.5) */
+@utility edge-light {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* Stacked card shadow (§1.5) */
+@utility stack-shadow {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 -24px 60px -20px rgb(5 5 5 / 0.7);
+}
+
+@utility divider-gradient {
+  height: 1px;
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.3) 0%, #0d0d0d 100%);
+}
+@utility divider-gradient-rtl {
+  height: 1px;
+  background: linear-gradient(270deg, rgb(255 255 255 / 0.3) 0%, #0d0d0d 100%);
+}
+
+/* Marquee edge masks (§1.2) */
+@utility mask-chips {
+  mask-image: linear-gradient(90deg, transparent 0%, rgb(0 0 0 / 0.9) 10.36%, rgb(0 0 0 / 0.9) 88.29%, transparent 100%);
+}
+@utility mask-tiles {
+  mask-image: linear-gradient(90deg, transparent 0%, rgb(0 0 0 / 0.9) 7.21%, rgb(0 0 0 / 0.9) 92.79%, transparent 100%);
+}
+
+/* Glass on photos (§1.2) */
+@utility glass {
+  background: var(--color-glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+@layer components {
+/* ==========================================================================
+   SplitText (§2.5 RevealText)
+   ========================================================================== */
+.rt-line {
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.rt-chars .rt-line {
+  perspective: 1000px;
+}
+.rt-chars .rt-char {
+  transform-origin: 50% 100%;
+}
+
+/* ==========================================================================
+   RollText (§2.5): structural CSS only; motion drives the flip
+   ========================================================================== */
+.roll {
+  display: inline-flex;
+  overflow: hidden;
+  perspective: 1000px;
+  vertical-align: top;
+}
+.roll-inner {
+  position: relative;
+  display: grid;
+  white-space: pre;
+  line-height: 1;
+  padding-bottom: 2px;
+}
+.roll-copy {
+  grid-area: 1 / 1;
+  display: block;
+}
+.roll-char {
+  display: inline-block;
+  transform-style: preserve-3d;
+}
+
+/* ==========================================================================
+   PrimaryButton square-fill (§2.5). CSS only, compositor friendly.
+   ========================================================================== */
+.pbtn {
+  --pbtn-bg: #f65802;
+  --pbtn-box: #ffffff;
+  --pbtn-arrow: #0d0d0d;
+  --pbtn-label: var(--color-accent-ink);
+  --pbtn-label-on: #0d0d0d;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  height: 60px;
+  padding: 6px 24px 6px 6px;
+  border-radius: 6px;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--pbtn-bg);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.pbtn:active {
+  transform: scale(0.97);
+}
+.pbtn[aria-disabled="true"],
+.pbtn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.pbtn--white {
+  --pbtn-bg: #ffffff;
+  --pbtn-box: #0d0d0d;
+  --pbtn-arrow: #ffffff;
+  --pbtn-label: #0d0d0d;
+  --pbtn-label-on: #ffffff;
+}
+.pbtn--dark {
+  --pbtn-bg: #0d0d0d;
+  --pbtn-box: #f65802;
+  --pbtn-arrow: #0d0d0d;
+  --pbtn-label: #ffffff;
+  --pbtn-label-on: var(--color-accent-ink);
+}
+.pbtn-fill {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--pbtn-box);
+  clip-path: inset(6px calc(100% - 54px) 6px 6px round 4px);
+  transition: clip-path var(--dur-spring-ui) var(--ease-spring-ui);
+  pointer-events: none;
+}
+.pbtn-wash {
+  display: none;
+}
+.pbtn-icon {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  color: var(--pbtn-arrow);
+}
+.pbtn-arrow {
+  display: block;
+  transition: transform var(--dur-spring-ui) var(--ease-spring-ui);
+}
+.pbtn-label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  color: var(--pbtn-label);
+  transition: color var(--dur-spring-ui) var(--ease-spring-ui);
+}
+@media (hover: hover) {
+  .pbtn:hover .pbtn-fill,
+  [data-roll-parent]:hover .pbtn-fill {
+    clip-path: inset(2px round 4px);
+  }
+  .pbtn:hover .pbtn-arrow,
+  [data-roll-parent]:hover .pbtn-arrow {
+    transform: rotate(-45deg);
+  }
+  .pbtn:hover .pbtn-label,
+  [data-roll-parent]:hover .pbtn-label {
+    color: var(--pbtn-label-on);
+  }
+}
+.pbtn:focus-visible .pbtn-fill,
+[data-roll-parent]:focus-visible .pbtn-fill {
+  clip-path: inset(2px round 4px);
+}
+.pbtn:focus-visible .pbtn-arrow,
+[data-roll-parent]:focus-visible .pbtn-arrow {
+  transform: rotate(-45deg);
+}
+.pbtn:focus-visible .pbtn-label,
+[data-roll-parent]:focus-visible .pbtn-label {
+  color: var(--pbtn-label-on);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Fill becomes a 0.15s colour crossfade; the arrow does not rotate (§6.3) */
+  .pbtn-fill {
+    transition: none;
+  }
+  .pbtn-wash {
+    display: block;
+    position: absolute;
+    inset: 2px;
+    z-index: 1;
+    border-radius: 4px;
+    background: var(--pbtn-box);
+    opacity: 0;
+    transition: opacity 0.15s linear;
+    pointer-events: none;
+  }
+  .pbtn .pbtn-arrow {
+    transform: none !important;
+  }
+  .pbtn-label {
+    transition-duration: 0.15s;
+    transition-timing-function: linear;
+  }
+  .pbtn:hover .pbtn-fill,
+  [data-roll-parent]:hover .pbtn-fill,
+  .pbtn:focus-visible .pbtn-fill,
+  [data-roll-parent]:focus-visible .pbtn-fill {
+    clip-path: inset(6px calc(100% - 54px) 6px 6px round 4px);
+  }
+  .pbtn:hover .pbtn-wash,
+  [data-roll-parent]:hover .pbtn-wash,
+  .pbtn:focus-visible .pbtn-wash,
+  [data-roll-parent]:focus-visible .pbtn-wash {
+    opacity: 1;
+  }
+}
+
+/* Submit variant (portvio "Button 2") */
+.sbtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 54px;
+  padding: 16px;
+  border-radius: 6px;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  transition:
+    background-color var(--dur-colour) var(--ease-portvio),
+    color var(--dur-colour) var(--ease-portvio),
+    transform var(--dur-press) var(--ease-out);
+}
+@media (hover: hover) {
+  .sbtn:hover {
+    background: var(--color-accent-85);
+  }
+}
+.sbtn:active {
+  transform: scale(0.97);
+}
+.sbtn:disabled,
+.sbtn[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.sbtn[data-state="error"] {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* ==========================================================================
+   MediaSlot placeholder (§5.3)
+   ========================================================================== */
+.ms-ph {
+  overflow: hidden;
+  background: #161515;
+  isolation: isolate;
+}
+.ms-ph::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px #3c3c3c;
+  pointer-events: none;
+  z-index: 4;
+}
+.ms-ph-grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("/textures/grain.png");
+  background-size: 256px 256px;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.ms-ph-ambient {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(246 88 2 / 0.06), transparent);
+  pointer-events: none;
+}
+.ms-ph-shimmer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ms-ph-shimmer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 60%;
+  background: linear-gradient(100deg, transparent 35%, rgb(246 88 2 / 0.1) 50%, transparent 65%);
+  transform: translateX(-100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ms-ph-shimmer::before {
+    animation: var(--animate-shimmer);
+  }
+  .ms-ph-ambient {
+    animation: var(--animate-breathe);
+  }
+}
+.ms-ph-crop {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgb(255 255 255 / 0.18);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+.ms-ph-crop[data-c="tl"] {
+  top: 12px;
+  left: 12px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.ms-ph-crop[data-c="tr"] {
+  top: 12px;
+  right: 12px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.ms-ph-crop[data-c="bl"] {
+  bottom: 12px;
+  left: 12px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.ms-ph-crop[data-c="br"] {
+  bottom: 12px;
+  right: 12px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+/* ==========================================================================
+   Spotlight (§1.6.3)
+   ========================================================================== */
+.spotlight {
+  position: relative;
+  --mx: 50%;
+  --my: 50%;
+  --spot-o: 0;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(28rem circle at var(--mx) var(--my), rgb(246 88 2 / 0.08), transparent 70%);
+  opacity: var(--spot-o);
+  transition: opacity 0.4s var(--ease-out);
+  pointer-events: none;
+  z-index: 0;
+}
+
+}
+
+/* ==========================================================================
+   Keyframes (transform / opacity only)
+   ========================================================================== */
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  17% {
+    transform: translate(-3%, 2%);
+  }
+  33% {
+    transform: translate(2%, -3%);
+  }
+  50% {
+    transform: translate(-2%, -2%);
+  }
+  67% {
+    transform: translate(3%, 3%);
+  }
+  83% {
+    transform: translate(-3%, 1%);
+  }
+  100% {
+    transform: translate(1%, -1%);
+  }
+}
+
+/* 2.2s pass + 0.6s rest = 2.8s cycle (§5.3) */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  78.57% {
+    transform: translateX(260%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+@keyframes breathe {
+  from {
+    scale: 1;
+  }
+  to {
+    scale: 1.15;
+  }
+}
+
+@keyframes glow-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(var(--gx, 6vw), var(--gy, -4vh), 0) scale(1.15);
+  }
+}
+
+@keyframes glow-breathe {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 0.65;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

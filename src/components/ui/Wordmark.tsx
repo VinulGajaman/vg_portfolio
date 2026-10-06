@@ -34,7 +34,8 @@ export function Wordmark({
         <span className="hidden md:inline"> </span>
         <span className="block md:inline">
           GAJAMAN
-          {sparkle && <Sparkle className="ml-[.02em] w-[.28em] align-super" />}
+          {/* Lifted with relative top so it never grows the line box (align-super opened a gap on phone). */}
+          {sparkle && <Sparkle className="relative -top-[.45em] ml-[.02em] inline-block w-[.28em]" />}
         </span>
       </p>
     </div>

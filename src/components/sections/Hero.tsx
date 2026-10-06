@@ -51,7 +51,9 @@ function HeroWordmark() {
         </span>
       ))}
       {sparkle && (
-        <span data-wm-char="" className="inline-block origin-[50%_100%] align-super">
+        // Lifted with relative top (no layout effect), not align-super: a raised inline box grew the
+        // line box and opened a big gap between the two wordmark lines on phone.
+        <span data-wm-char="" className="relative -top-[.45em] inline-block origin-[50%_100%]">
           <Sparkle className="ml-[.02em] w-[.28em]" />
         </span>
       )}
@@ -392,7 +394,7 @@ export default function Hero() {
         />
 
         {/* Top group: in flow on phone, absolutely placed on tablet / desktop */}
-        <div className="relative z-[4] flex flex-col items-start gap-[30px] pt-[100px] md:static md:p-0">
+        <div className="relative z-[4] flex flex-col items-start gap-[30px] pb-10 pt-[100px] md:static md:p-0">
           <div className="md:absolute md:left-[100px] md:top-[260px] md:z-[4] md:w-[280px] lg:left-[240px]">
             <div data-mouse="4">
               <div data-hi="tag" data-intro="" className="flex max-w-[280px] items-start gap-5">

@@ -143,11 +143,8 @@ export const projects: Project[] = [
         "The diagnosis and fix of a head-of-line blocking bug in the photo-upload queue",
       ],
       results: [
-        {
-          display: "~20 min → secs",
-          label: "Photo-upload time",
-          counter: { from: 20, to: 0, prefix: "~", suffix: " min" },
-        },
+        // No counter: a count-down to "~0 min" would misstate "seconds".
+        { display: "~20 min → secs", label: "Photo-upload time" },
       ],
     },
   },
@@ -246,8 +243,8 @@ export const projects: Project[] = [
         { display: "100+", label: "Daily queries handled", counter: { from: 0, to: 100, suffix: "+" } },
         { display: "50%", label: "Fewer manual support tickets", counter: { from: 0, to: 50, suffix: "%" } },
       ],
-      resultsNote:
-        "From the DMS experience section; to be confirmed as the same system (§9 item 2).",
+      // † From the DMS experience section; confirm it is the same system (§9 item 2).
+      resultsNote: "Measured on the deployed OpenAI + RAG support chatbot at DMS.",
     },
   },
 ];

@@ -60,7 +60,11 @@ export function ParallaxImage({
   );
 
   return (
-    <div ref={ref} className={cn("relative overflow-hidden", className)}>
+    // cn() does not resolve Tailwind conflicts, so only default to `relative` when the caller sets no position.
+    <div
+      ref={ref}
+      className={cn(!/\b(absolute|fixed|sticky)\b/.test(className ?? "") && "relative", "overflow-hidden", className)}
+    >
       <div ref={innerRef} className={cn("absolute left-0 top-[-10%] h-[120%] w-full", innerClassName)}>
         {children}
       </div>

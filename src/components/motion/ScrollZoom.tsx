@@ -68,7 +68,11 @@ export function ScrollZoom({
   );
 
   return (
-    <div ref={ref} className={cn("relative overflow-hidden", className)}>
+    // cn() does not resolve Tailwind conflicts, so only default to `relative` when the caller sets no position.
+    <div
+      ref={ref}
+      className={cn(!/\b(absolute|fixed|sticky)\b/.test(className ?? "") && "relative", "overflow-hidden", className)}
+    >
       <div
         ref={innerRef}
         className={cn(

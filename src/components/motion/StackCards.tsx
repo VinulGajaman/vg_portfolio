@@ -86,8 +86,8 @@ export function StackCards({
   return (
     <div
       ref={ref}
-      className={cn("flex flex-col", className)}
-      style={{ gap, paddingBottom: dwell }}
+      className={cn("flex flex-col md:motion-safe:pb-[var(--stack-dwell)]", className)}
+      style={{ gap, ["--stack-dwell" as string]: dwell }}
     >
       {items.map((child, i) => (
         <div

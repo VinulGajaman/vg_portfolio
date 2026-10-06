@@ -98,9 +98,10 @@ export const about = {
   /** Statement split so the accent span can be coloured (§3.3). */
   statement: [
     { text: "I ENGINEER " },
-    { text: "REAL-TIME, MOBILE & WEB SYSTEMS", accent: true },
+    // Comma kept inside the accent span: SplitText would otherwise treat it as its own word and let it wrap alone.
+    { text: "REAL-TIME, MOBILE & WEB SYSTEMS,", accent: true },
     {
-      text: ", FROM AIRPORT ACCESS CONTROL TO MULTI-CHAIN CRYPTO WALLETS, BUILT TO BE FAST, SECURE AND READY FOR PRODUCTION.",
+      text: " FROM AIRPORT ACCESS CONTROL TO MULTI-CHAIN CRYPTO WALLETS, BUILT TO BE FAST, SECURE AND READY FOR PRODUCTION.",
     },
   ],
   stats: [

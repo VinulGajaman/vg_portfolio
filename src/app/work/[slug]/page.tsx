@@ -1,9 +1,14 @@
-/** Case-study STUB (DESIGN.md §4). The case-study agent replaces this template. */
+/** Project case-study page (DESIGN.md §4). Statically generated for the 6 CV projects. */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProject, projectSlugs } from "@/content/projects";
+import { getNeighbours, getProject, projectSlugs } from "@/content/projects";
 import { getMediaMap } from "@/lib/media.server";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { CaseBanner, CaseHero } from "@/components/work/CaseHero";
+import { MetaRow } from "@/components/work/MetaRow";
+import { Article } from "@/components/work/Article";
+import { Gallery } from "@/components/work/Gallery";
+import { PrevNext } from "@/components/work/PrevNext";
+import { NextProject } from "@/components/work/NextProject";
 
 export const dynamicParams = false;
 
@@ -16,10 +21,17 @@ export async function generateMetadata({ params }: PageProps<"/work/[slug]">): P
   const p = getProject(slug);
   if (!p) return {};
   const banner = getMediaMap()[`work-${slug}-banner`];
+  // The root layout's title template appends " | Vinul Gajaman".
   return {
     title: p.title,
     description: p.description,
-    openGraph: banner ? { images: [{ url: banner.src }] } : undefined,
+    alternates: { canonical: `/work/${slug}` },
+    openGraph: {
+      title: `${p.title} | Vinul Gajaman`,
+      description: p.description,
+      url: `/work/${slug}`,
+      ...(banner ? { images: [{ url: banner.src, alt: `${p.title} banner` }] } : {}),
+    },
   };
 }
 
@@ -27,18 +39,25 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
   const { slug } = await params;
   const p = getProject(slug);
   if (!p) notFound();
+  const { prev, next } = getNeighbours(slug);
+
   return (
     <section className="section-layer px-[var(--gutter)] pb-[140px] pt-[140px] md:pt-[160px] lg:pt-[180px]">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-[50px]">
-        <div className="flex flex-col justify-between gap-6 lg:flex-row">
-          <h1 className="type-h2 max-w-[1000px]">{p.fullTitle}</h1>
-          <p className="type-body max-w-[400px] text-ink-soft">{p.caseStudy.summary}</p>
-        </div>
-        <div>
-          <PrimaryButton href="/#work" transitionTitle="Home">
-            Back to Home
-          </PrimaryButton>
-        </div>
+        <CaseHero title={p.fullTitle} summary={p.caseStudy.summary} />
+        <MetaRow
+          items={[
+            { label: "Company", value: p.company },
+            { label: "Role", value: p.caseStudy.role },
+            { label: "Stack", value: p.stack.join(", ") },
+            { label: "Year", value: p.year },
+          ]}
+        />
+        <CaseBanner slug={p.slug} title={p.title} />
+        <Article project={p} />
+        <Gallery slug={p.slug} />
+        <PrevNext prev={prev} next={next} />
+        <NextProject project={next} />
       </div>
     </section>
   );

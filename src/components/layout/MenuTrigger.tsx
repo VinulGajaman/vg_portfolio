@@ -13,8 +13,8 @@ import { SPRING } from "@/lib/motion-tokens";
 import { setUI, useUI } from "@/lib/store";
 import { cn } from "@/lib/cn";
 
-export const MenuTrigger = forwardRef<HTMLButtonElement, { className?: string }>(function MenuTrigger(
-  { className },
+export const MenuTrigger = forwardRef<HTMLButtonElement, { className?: string; iconOnly?: boolean }>(function MenuTrigger(
+  { className, iconOnly = false },
   ref,
 ) {
   const open = useUI((s) => s.menuOpen);
@@ -29,7 +29,11 @@ export const MenuTrigger = forwardRef<HTMLButtonElement, { className?: string }>
       aria-label={open ? "Close menu" : "Open menu"}
       onClick={() => setUI({ menuOpen: !open })}
       data-roll-parent=""
-      className={cn("pressable inline-flex h-6 items-center gap-[10px] text-ink", className)}
+      className={cn(
+        "pressable inline-flex items-center text-ink",
+        iconOnly ? "h-12 w-12 justify-center" : "h-6 gap-[10px]",
+        className,
+      )}
     >
       <span className="relative block h-6 w-6" aria-hidden>
         <m.span
@@ -51,11 +55,14 @@ export const MenuTrigger = forwardRef<HTMLButtonElement, { className?: string }>
           transition={t}
         />
       </span>
-      <span className="type-ui" aria-hidden>
-        <RollText to="Close" active={open}>
-          Menu
-        </RollText>
-      </span>
+      {!iconOnly && (
+        // Flex-centred against the 24px icon; the 1px top pad optically centres Inter's cap height.
+        <span className="type-ui inline-flex h-6 items-center pt-px leading-none" aria-hidden>
+          <RollText to="Close" active={open}>
+            Menu
+          </RollText>
+        </span>
+      )}
     </button>
   );
 });

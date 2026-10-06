@@ -61,7 +61,11 @@ function Row({ row }: { row: ExpertiseRow }) {
         </span>
         <div className={cn("flex min-w-[260px] flex-1 flex-col gap-5", open && "lg:justify-between lg:gap-[130px]")}>
           <h3 className="type-statement text-ink">
-            <RollText size="lg">{row.title}</RollText>
+            {/* Phone: plain wrapping text (RollText cannot wrap and ran off screen). Only one copy is displayed. */}
+            <span className="md:hidden">{row.title}</span>
+            <span className="hidden md:inline">
+              <RollText size="lg">{row.title}</RollText>
+            </span>
           </h3>
           <m.p
             initial={false}

@@ -122,7 +122,10 @@ export default function Experience() {
         />
 
         <div className="mx-auto flex max-w-[960px] gap-6 md:flex-col md:gap-10">
-          <Timeline nodes={timelineNodes} trigger="#experience-shell" className="w-[104px] shrink-0 md:w-full max-md:[&>ol]:h-full max-md:[&>ol]:justify-between" />
+          {/* Phone: the timeline is hidden; a 104px side rail squeezed the cards to ~140px wide. The cards carry the dates. */}
+          <div className="hidden md:block md:w-full">
+            <Timeline nodes={timelineNodes} trigger="#experience-shell" className="md:w-full" />
+          </div>
           <Reveal variant="card" delay={0.3} className="min-w-0 flex-1">
             <div
               ref={shellRef}

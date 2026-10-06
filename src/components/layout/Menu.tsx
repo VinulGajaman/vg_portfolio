@@ -124,7 +124,7 @@ export function Menu() {
                       >
                         <m.span
                           aria-hidden
-                          className="absolute left-[-30px] top-1/2 -mt-3 block"
+                          className="absolute left-[-30px] top-1/2 -mt-3 hidden md:block"
                           initial={false}
                           animate={hovered === i ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
                           transition={SPRING.springUI}

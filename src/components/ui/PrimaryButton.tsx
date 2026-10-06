@@ -6,8 +6,8 @@
  * inset(6px calc(100% - 54px) 6px 6px round 4px) → inset(2px round 4px) on hover / focus-visible
  * (or hover of the closest [data-roll-parent]) over .63s springUI; the arrow rotates 0 → −45°
  * and the label colour flips on the same spring. Label plays <RollText>. Wrapped in
- * <Magnetic strength={.3}>. Renders <TransitionLink> for internal routes, <a> for external /
- * mailto / hash links, <button> otherwise. CSS lives in globals.css (.pbtn*).
+ * <Magnetic strength={.3}>. Renders <TransitionLink> for internal routes and same-page hash
+ * links, <a> for external / mailto links, <button> otherwise. CSS lives in globals.css (.pbtn*).
  */
 import type { MouseEventHandler, ReactNode } from "react";
 import { Magnetic } from "@/components/motion/Magnetic";
@@ -65,7 +65,7 @@ export function PrimaryButton({
   let el: ReactNode;
   if (asSpan) {
     el = <span className={cls}>{inner}</span>;
-  } else if (href && href.startsWith("/") && !download) {
+  } else if (href && (href.startsWith("/") || href.startsWith("#")) && !download) {
     el = (
       <TransitionLink
         href={href}

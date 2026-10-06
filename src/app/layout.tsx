@@ -46,10 +46,10 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-/** Adds html.js before first paint; skips the preloader on later visits / reduced motion (§2.4). */
+/** Adds html.js before first paint; skips the splash only for reduced motion or the portvio profile (§2.4). */
 const headScript = `(function(){var d=document.documentElement;d.classList.add('js');try{if(${
   MOTION_PROFILE === "portvio" ? "true" : "false"
-}||matchMedia('(prefers-reduced-motion: reduce)').matches||sessionStorage.getItem('vg-loaded')==='1')d.classList.add('no-preloader')}catch(e){d.classList.add('no-preloader')}})();`;
+}||matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('no-preloader')}catch(e){d.classList.add('no-preloader')}})();`;
 
 const personJsonLd = {
   "@context": "https://schema.org",

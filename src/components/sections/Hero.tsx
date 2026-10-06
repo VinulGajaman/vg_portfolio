@@ -426,13 +426,14 @@ export default function Hero() {
               </span>
             </span>
           </h1>
-          <div className="relative z-[4] flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-10">
+          {/* Stacked until desktop: side by side at tablet width squeezed the paragraph into a narrow column. */}
+          <div className="relative z-[4] flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
             <div data-hi="para" data-intro="" className="max-w-[540px]">
               <RevealText as="p" mode="lines" trigger="intro" delay={0.8} className="type-lead text-ink">
                 {hero.paragraph}
               </RevealText>
             </div>
-            <div data-hi="chips" data-intro="" className="w-full min-w-0 md:max-w-[550px]">
+            <div data-hi="chips" data-intro="" className="w-full min-w-0 lg:max-w-[550px]">
               <Marquee speed={40} gap={8} mask="chips" label="Core stack">
                 {hero.chips.map((c) => (
                   <li key={c}>

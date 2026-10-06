@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * Compact nav pill (DESIGN.md §3.1, U16). Fixed top 16 / right 20 (phone 16), z 20: a 48px pill
- * (rgba(13,13,13,.6), blur(12px), 1px #3C3C3C, radius 100, padding 0 18) with the hamburger and
- * "Menu". Plus a 40px orange "V" disc at top-left linking to #hero. Appears once scrollY > 100vh
- * (yPercent −150 → 0, 0.6s drawer); hides on scroll down (delta > 8px), shows on scroll up.
+ * Compact nav (DESIGN.md §3.1, U16, revised per Vinul): once the hero nav has scrolled away (scrollY > 120) a bare hamburger icon
+ * (no label, no pill) stays fixed top-right in a 48px hit area, with mix-blend-mode: difference so
+ * it reads over any section or photo. Plus a 40px orange "VG" disc at top-left linking to #hero.
+ * Enters with yPercent −150 → 0 (0.6s drawer) and stays put while scrolling in either direction.
  * Stays visible while the menu is open (z 42). Magnetic. Off in the `portvio` profile.
  */
 import { useEffect, useRef } from "react";
@@ -16,6 +16,9 @@ import { Magnetic } from "@/components/motion/Magnetic";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { MenuTrigger } from "./MenuTrigger";
 import { cn } from "@/lib/cn";
+
+/** Just past the in-flow nav (72–90px tall), so a menu trigger is always on screen. */
+const SHOW_AFTER = 120;
 
 export function CompactNav() {
   const pillRef = useRef<HTMLDivElement>(null);
@@ -35,7 +38,6 @@ export function CompactNav() {
       const els = [pill, disc];
       gsap.set(els, { yPercent: -150, autoAlpha: 0 });
       let visible = false;
-      let last = 0;
       const show = (v: boolean) => {
         if (v === visible) return;
         visible = v;
@@ -52,14 +54,10 @@ export function CompactNav() {
         start: 0,
         end: "max",
         onUpdate: (self) => {
-          const y = self.scroll();
-          const delta = y - last;
-          if (Math.abs(delta) < 8) return;
-          last = y;
           if (menuRef.current) return;
-          if (y <= window.innerHeight) show(false);
-          else show(delta < 0);
+          show(self.scroll() > SHOW_AFTER);
         },
+        onRefresh: (self) => show(self.scroll() > SHOW_AFTER),
       });
       return () => {
         st.kill();
@@ -84,12 +82,13 @@ export function CompactNav() {
       </div>
       <div
         ref={pillRef}
-        className={cn("invisible fixed right-4 top-4 md:right-5", menuOpen && shown ? "z-[42]" : "z-20")}
+        className={cn(
+          "invisible fixed right-2 top-2 mix-blend-difference md:right-3",
+          menuOpen && shown ? "z-[42]" : "z-20",
+        )}
       >
         <Magnetic>
-          <div className="border-overlay flex h-12 items-center rounded-pill bg-[rgba(13,13,13,.6)] px-[18px] backdrop-blur-[12px]">
-            <MenuTrigger />
-          </div>
+          <MenuTrigger iconOnly className="text-white" />
         </Magnetic>
       </div>
     </>

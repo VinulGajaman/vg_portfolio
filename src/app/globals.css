@@ -192,7 +192,7 @@ html.lenis body {
   }
 }
 
-/* Preloader: only when JS runs and the session has not seen it (§2.5). */
+/* Splash: on every load when JS runs (skipped for reduced motion via html.no-preloader). */
 .preloader {
   display: none;
 }

@@ -57,7 +57,7 @@ function WorkCard({ project, index }: { project: Project; index: number }) {
       {/* Info column */}
       <div className="relative z-[1] flex flex-col justify-between gap-8 p-[30px] lg:w-[520px] lg:shrink-0">
         <div className="flex items-start justify-between gap-4">
-          <ul className="flex flex-wrap gap-[6px]">
+          <ul className="flex min-w-0 flex-1 flex-wrap gap-[6px]">
             {project.tags.map((t) => (
               <li key={t}>
                 <Tag>{t}</Tag>

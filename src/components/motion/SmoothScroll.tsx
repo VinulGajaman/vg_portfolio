@@ -2,6 +2,8 @@
 
 /**
  * <SmoothScroll>: Lenis 1.8s exponential glide driven by gsap.ticker (DESIGN.md §2.4).
+ * Lenis `anchors` is off: same-page hash links go through <TransitionLink> (Lenis' own anchor
+ * handler resolved the sticky #hero to the current position and overrode the logo scroll).
  * One rAF for the page: gsap.ticker.add(t => lenis.raf(t*1000)), lagSmoothing(0),
  * lenis.on("scroll", ScrollTrigger.update). Inner scroll areas use data-lenis-prevent.
  * Under reduced motion Lenis is not mounted (native scroll); Lenis' own
@@ -21,7 +23,6 @@ const OPTIONS = {
   smoothWheel: true,
   syncTouch: false,
   autoRaf: false,
-  anchors: { offset: 0, duration: 1.8 },
   stopInertiaOnNavigate: true,
   respectReducedMotion: true,
 };

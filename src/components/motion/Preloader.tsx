@@ -1,48 +1,55 @@
 "use client";
 
 /**
- * <Preloader> (DESIGN.md §2.5, U1). Once per session (sessionStorage "vg-loaded"); the inline
- * head script adds html.no-preloader on later visits / reduced motion so it never flashes.
- * Layout: fixed #0A0A0A panel, z 80, with grain. Bottom-left "VINUL GAJAMAN" (h2, RevealText
- * chars, stagger .035); bottom-right a 3-digit counter (display-counter) over a 1px #3C3C3C
- * track with an orange scaleX fill; top-left role, top-right location (small, ink-soft).
- * Progress: document.fonts.ready = 40%, hero media decode ([data-preload-media]) = 60%; the
- * counter follows with quickTo (0.6s power3.out); min 1.4s, forced complete at 3.0s.
- * Exit (~1.2s): counter + name yPercent −110 (0.6s mask, stagger .05); at .35s the panel lifts
- * on a constant 7° slant (left edge higher, 12.28vw = 100vw × tan 7°) over 0.9s expoInOut;
- * at .55s the hero intro starts. Then lenis.start(), ScrollTrigger.refresh(), cursor enabled.
- * When skipped, the intro gate opens 0.3s after hydration (portvio's appear start).
+ * <Preloader>: counter splash (DESIGN.md §2.5 U1, revised per Vinul: counter only, on every load
+ * and reload). The inline head script adds html.no-preloader only for reduced motion or the
+ * `portvio` profile, so the panel never flashes in those cases.
+ *
+ * Layout: fixed #0A0A0A panel, z 80, grain at .045. Bottom-right a large Clash counter 000 → 100
+ * (tabular, masked), with a full-width 1px #3C3C3C hairline along the bottom whose orange fill
+ * tracks the same value. Nothing else on screen.
+ * Count: the shown value is min(real progress, timed ramp). The ramp runs 0 → 100 over RAMP_S with
+ * power2.inOut, so the count is always visible from 000 even when everything is cached; real
+ * progress (document.fonts.ready = 40%, hero media decode [data-preload-media] = 60%) can only
+ * hold it back. Forced complete at MAX_MS.
+ * Exit (~1.3s): the counter rises out (yPercent −110, 0.6s mask) and the hairline fades; at .3s the
+ * dark panel lifts on a constant 7° slant (left edge higher, 12.28vw = 100vw × tan 7°) over 0.9s
+ * expoInOut, revealing an orange layer that follows 0.12s later; at .55s the hero intro starts.
+ * Then scroll unlocks and ScrollTrigger refreshes.
  */
 import { useEffect, useRef, useState } from "react";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { isPlus } from "@/lib/motion-tokens";
 import { lockScroll, unlockScroll } from "@/lib/scroll";
 import { setUI, startIntro } from "@/lib/store";
-import { preloader as copy } from "@/content/site";
-import { RevealText } from "./RevealText";
 
-const MIN_MS = 1400;
-const MAX_MS = 3000;
+const RAMP_S = 1.8;
+const HOLD_S = 0.25;
+const MAX_MS = 4000;
 const TAN7 = Math.tan((7 * Math.PI) / 180); // 0.1228
+
+/** Clip polygon for a panel lifting on a 7° slant; p = 0 covers the screen, p = 1 is gone. */
+function slant(p: number) {
+  const W = document.documentElement.clientWidth;
+  const H = window.innerHeight;
+  const s = W * TAN7;
+  const right = (1 - p) * (H + s);
+  return `polygon(0px 0px, 100% 0px, 100% ${right}px, 0px ${right - s}px)`;
+}
 
 export function Preloader() {
   const [done, setDone] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const accentRef = useRef<HTMLDivElement>(null);
+  const countRef = useRef<HTMLSpanElement>(null);
   const numRef = useRef<HTMLSpanElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
   const fillRef = useRef<HTMLDivElement>(null);
-  const exitRefs = useRef<HTMLElement[]>([]);
-  const fadeRefs = useRef<HTMLElement[]>([]);
 
   useEffect(() => {
     const html = document.documentElement;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let seen = false;
-    try {
-      seen = sessionStorage.getItem("vg-loaded") === "1";
-    } catch {
-      seen = true;
-    }
-    if (seen || reduce || !isPlus || html.classList.contains("no-preloader")) {
+    if (reduce || !isPlus || html.classList.contains("no-preloader")) {
       html.classList.add("no-preloader");
       const t = window.setTimeout(startIntro, 300);
       const raf = requestAnimationFrame(() => setDone(true));
@@ -51,49 +58,39 @@ export function Preloader() {
         cancelAnimationFrame(raf);
       };
     }
-    try {
-      sessionStorage.setItem("vg-loaded", "1");
-    } catch {
-      /* private mode: plays once per page load instead */
-    }
 
     const panel = panelRef.current!;
+    const accent = accentRef.current!;
     const num = numRef.current!;
     const fill = fillRef.current!;
     setUI({ preloader: true });
     lockScroll("preloader");
     window.scrollTo(0, 0);
 
-    const started = performance.now();
-    const shown = { v: 0 };
-    let target = 0;
+    let real = 0;
     let fontsPart = 0;
     let mediaPart = 0;
     let exiting = false;
     let killed = false;
+    const ramp = { v: 0 };
+    let shown = 0;
 
     const render = () => {
-      const v = Math.round(shown.v);
-      num.textContent = String(v).padStart(3, "0");
-      fill.style.transform = `scaleX(${shown.v / 100})`;
+      num.textContent = String(Math.round(shown)).padStart(3, "0");
+      fill.style.transform = `scaleX(${shown / 100})`;
     };
-    const to = gsap.quickTo(shown, "v", { duration: 0.6, ease: "power3.out", onUpdate: render });
 
     const exit = () => {
       if (exiting || killed) return;
       exiting = true;
-      const W = () => document.documentElement.clientWidth;
-      const H = () => window.innerHeight;
-      const lift = { p: 0 };
-      const setClip = () => {
-        const s = W() * TAN7;
-        const right = (1 - lift.p) * (H() + s);
-        const left = right - s;
-        panel.style.clipPath = `polygon(0px 0px, 100% 0px, 100% ${right}px, 0px ${left}px)`;
+      const lift = { dark: 0, accent: 0 };
+      const setClips = () => {
+        panel.style.clipPath = slant(lift.dark);
+        accent.style.clipPath = slant(lift.accent);
       };
-      setClip();
       gsap
         .timeline({
+          delay: HOLD_S,
           onComplete: () => {
             setUI({ preloader: false });
             unlockScroll("preloader");
@@ -101,36 +98,32 @@ export function Preloader() {
             setDone(true);
           },
         })
-        .to(exitRefs.current, { yPercent: -110, duration: 0.6, ease: "mask", stagger: 0.05 }, 0)
-        .to(fadeRefs.current, { autoAlpha: 0, duration: 0.4, ease: "out" }, 0)
-        .to(lift, { p: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClip }, 0.35)
+        .call(setClips, [], 0)
+        .to(countRef.current, { yPercent: -110, duration: 0.6, ease: "mask" }, 0)
+        .to(lineRef.current, { autoAlpha: 0, duration: 0.35, ease: "out" }, 0)
+        .to(lift, { dark: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClips }, 0.3)
+        .to(lift, { accent: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClips }, 0.42)
         .call(startIntro, [], 0.55);
     };
 
-    const update = () => {
-      target = Math.min(100, fontsPart + mediaPart);
-      to(target);
-    };
-    const check = () => {
+    // The shown value never runs ahead of real progress or of the timed ramp.
+    const tick = () => {
       if (killed || exiting) return;
-      const elapsed = performance.now() - started;
-      if (elapsed >= MAX_MS) {
-        target = 100;
-        to(100);
-      }
-      if (target >= 100 && elapsed >= MIN_MS && shown.v >= 99.5) {
-        exit();
-        return;
-      }
-      raf = requestAnimationFrame(check);
+      shown = Math.min(ramp.v, real);
+      render();
+      if (shown >= 100) exit();
     };
-    let raf = requestAnimationFrame(check);
+    gsap.ticker.add(tick);
+    const rampTween = gsap.to(ramp, { v: 100, duration: RAMP_S, ease: "power2.inOut", delay: 0.15 });
+    const force = window.setTimeout(() => (real = 100), MAX_MS);
 
+    const update = () => {
+      real = Math.min(100, fontsPart + mediaPart);
+    };
     document.fonts.ready.then(() => {
       fontsPart = 40;
       update();
     });
-
     const media = Array.from(document.querySelectorAll<HTMLElement>("[data-preload-media]"));
     if (!media.length) {
       mediaPart = 60;
@@ -143,9 +136,8 @@ export function Preloader() {
         update();
       };
       media.forEach((el) => {
-        if (el instanceof HTMLImageElement) {
-          el.decode().then(one, one);
-        } else if (el instanceof HTMLVideoElement) {
+        if (el instanceof HTMLImageElement) el.decode().then(one, one);
+        else if (el instanceof HTMLVideoElement) {
           if (el.readyState >= 3) one();
           else el.addEventListener("canplay", one, { once: true });
         } else one();
@@ -154,7 +146,9 @@ export function Preloader() {
 
     return () => {
       killed = true;
-      cancelAnimationFrame(raf);
+      gsap.ticker.remove(tick);
+      rampTween.kill();
+      window.clearTimeout(force);
       setUI({ preloader: false });
       unlockScroll("preloader");
     };
@@ -162,51 +156,33 @@ export function Preloader() {
 
   if (done) return null;
 
-  const addExit = (el: HTMLElement | null) => {
-    if (el && !exitRefs.current.includes(el)) exitRefs.current.push(el);
-  };
-  const addFade = (el: HTMLElement | null) => {
-    if (el && !fadeRefs.current.includes(el)) fadeRefs.current.push(el);
-  };
-
   return (
-    <div
-      ref={panelRef}
-      aria-hidden
-      className="preloader fixed inset-0 z-[80] bg-canvas-deep"
-      style={{ clipPath: "polygon(0px 0px, 100% 0px, 100% 100%, 0px 100%)" }}
-    >
+    <div aria-hidden className="preloader fixed inset-0 z-[80]">
+      {/* Orange layer revealed under the lifting dark panel */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[.045] mix-blend-overlay"
-        style={{ backgroundImage: "url(/textures/grain.png)", backgroundSize: "256px 256px" }}
+        ref={accentRef}
+        className="absolute inset-0 bg-accent"
+        style={{ clipPath: "polygon(0px 0px, 100% 0px, 100% 100%, 0px 100%)" }}
       />
-      <div className="relative flex h-full flex-col justify-between px-[var(--gutter)] py-[20px] lg:py-[24px]">
-        <div className="flex justify-between gap-6">
-          <span ref={addFade} className="type-small text-ink-soft">
-            {copy.topLeft}
-          </span>
-          <span ref={addFade} className="type-small text-right text-ink-soft">
-            {copy.topRight}
+      <div
+        ref={panelRef}
+        className="absolute inset-0 overflow-hidden bg-canvas-deep"
+        style={{ clipPath: "polygon(0px 0px, 100% 0px, 100% 100%, 0px 100%)" }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[.045] mix-blend-overlay"
+          style={{ backgroundImage: "url(/textures/grain.png)", backgroundSize: "256px 256px" }}
+        />
+        <div className="absolute bottom-[18px] right-[var(--gutter)] overflow-hidden lg:bottom-[24px]">
+          <span
+            ref={countRef}
+            className="tabular block font-display text-[clamp(72px,16vw,200px)] font-semibold leading-[0.85] tracking-[-0.02em] text-ink"
+          >
+            <span ref={numRef}>000</span>
           </span>
         </div>
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div className="overflow-hidden pb-[.1em]">
-            <div ref={addExit}>
-              <RevealText as="p" mode="chars" trigger="mount" stagger={0.035} className="type-h2">
-                {copy.name}
-              </RevealText>
-            </div>
-          </div>
-          <div className="flex flex-col items-start md:items-end">
-            <div className="overflow-hidden">
-              <span ref={addExit} className="type-display-counter block">
-                <span ref={numRef}>000</span>
-              </span>
-            </div>
-            <div ref={addFade} className="mt-3 h-px w-full min-w-[200px] overflow-hidden bg-line">
-              <div ref={fillRef} className="h-full w-full origin-left bg-accent" style={{ transform: "scaleX(0)" }} />
-            </div>
-          </div>
+        <div ref={lineRef} className="absolute inset-x-0 bottom-0 h-px bg-line">
+          <div ref={fillRef} className="h-full w-full origin-left bg-accent" style={{ transform: "scaleX(0)" }} />
         </div>
       </div>
     </div>

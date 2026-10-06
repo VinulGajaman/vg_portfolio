@@ -60,12 +60,15 @@ export function StickyHero({
         section.style.visibility = v ? "hidden" : "";
         window.dispatchEvent(new CustomEvent("vg:hero-covered", { detail: v }));
       };
+      // State is derived from isActive (start → page end) and re-synced on every refresh, so a
+      // resize or breakpoint rebuild can never leave the hero stuck hidden.
       const coveredST = cover
         ? ScrollTrigger.create({
             trigger: cover,
             start: "bottom -100%",
-            onEnter: () => setCovered(true),
-            onLeaveBack: () => setCovered(false),
+            end: "max",
+            onToggle: (self) => setCovered(self.isActive),
+            onRefresh: (self) => setCovered(self.isActive),
           })
         : null;
 

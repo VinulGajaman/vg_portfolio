@@ -146,7 +146,8 @@ export function PinnedZoom({
     }
   };
 
-  const labelClass = "type-h2 whitespace-nowrap";
+  // Phone: smaller labels so "SHOWREEL" and "//2026©" meet without overlapping at 360–430px widths.
+  const labelClass = "type-h2 whitespace-nowrap max-md:text-[22px]";
 
   return (
     <section id={id} aria-labelledby={headingId} className={cn("section-layer", className)}>

@@ -45,6 +45,9 @@ export function scrollToTarget(
   target: ScrollTarget,
   opts: { immediate?: boolean; offset?: number; force?: boolean; duration?: number } = {},
 ) {
+  // The hero is position: sticky, so its rect always reads top 0 and "#hero" would not move.
+  // It sits at the very top of the page, so scroll there instead.
+  if (target === "#hero") target = 0;
   if (lenis) {
     lenis.scrollTo(target, {
       immediate: opts.immediate,

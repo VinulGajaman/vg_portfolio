@@ -17,13 +17,24 @@ export type TransitionLinkProps = Omit<ComponentPropsWithoutRef<typeof Link>, "h
 };
 
 export const TransitionLink = forwardRef<HTMLAnchorElement, TransitionLinkProps>(
-  function TransitionLink({ href, transitionTitle, onNavigate, ...rest }, ref) {
+  function TransitionLink({ href, transitionTitle, onNavigate, onClick, ...rest }, ref) {
     const { navigate } = usePageTransition();
     return (
       <Link
         ref={ref}
         href={href}
         scroll={false}
+        onClick={(e) => {
+          onClick?.(e);
+          if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          // Same-page links (e.g. the logo → "/#hero") never reach onNavigate: Next handles the hash
+          // itself and jumps natively. Intercept here so Lenis glides there instead.
+          const url = new URL(href, window.location.href);
+          if (url.origin === window.location.origin && url.pathname.replace(/\/$/, "") === window.location.pathname.replace(/\/$/, "")) {
+            e.preventDefault();
+            navigate(href, transitionTitle);
+          }
+        }}
         onNavigate={(e) => {
           onNavigate?.(e);
           e.preventDefault();

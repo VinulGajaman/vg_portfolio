@@ -2,7 +2,7 @@
 
 /**
  * Tech Stack `#stack` (DESIGN.md §3.4, portvio Partners). Decorative logo marquee (aria-hidden,
- * 50px/s with velocity skew) plus the readable <SkillsIndex> below it.
+ * 50px/s with velocity skew) plus the interactive <SkillsIndex> panel below it.
  */
 import { Marquee } from "@/components/motion/Marquee";
 import { Reveal } from "@/components/motion/Reveal";
@@ -56,7 +56,9 @@ export default function TechStack() {
         </Marquee>
       </div>
 
-      <SkillsIndex className="container-site mt-10" />
+      <div className="container-site mt-10">
+        <SkillsIndex />
+      </div>
     </section>
   );
 }

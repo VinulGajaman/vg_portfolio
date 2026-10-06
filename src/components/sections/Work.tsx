@@ -155,7 +155,8 @@ export default function Work() {
       <div ref={ref} className="container-site">
         <SectionHeader eyebrow={work.eyebrow} title={work.title} counter={work.counter} titleId="work-title" />
         <Divider variant="solid" draw className="heading-gap mt-[30px] md:mt-10" />
-        <StackCards>
+        {/* Short dwell: with the Impact rail hidden, 40svh left a ~500px blank before Experience. */}
+        <StackCards dwell="15svh">
           {projects.map((p, i) => (
             <WorkCard key={p.slug} project={p} index={i} />
           ))}

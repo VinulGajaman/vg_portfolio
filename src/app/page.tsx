@@ -4,7 +4,6 @@ import TechStack from "@/components/sections/TechStack";
 import Expertise from "@/components/sections/Expertise";
 import Process from "@/components/sections/Process";
 import Work from "@/components/sections/Work";
-import Impact from "@/components/sections/Impact";
 import Experience from "@/components/sections/Experience";
 import Showreel from "@/components/sections/Showreel";
 import Contact from "@/components/sections/Contact";
@@ -19,7 +18,7 @@ export default function Home() {
       <Expertise />
       <Process />
       <Work />
-      <Impact />
+      {/* Impact ("Measured in Production") is hidden for now: re-add `<Impact />` from @/components/sections/Impact here. */}
       <Experience />
       <Showreel />
       <Contact />

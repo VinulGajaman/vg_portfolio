@@ -835,6 +835,16 @@ html.has-cursor [data-cursor="play"] * {
 /* ==========================================================================
    Keyframes (transform / opacity only)
    ========================================================================== */
+/* Skills panel: the active tab's autoplay timer (its animationend advances the panel). */
+@keyframes skill-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @keyframes grain {
   0% {
     transform: translate(0, 0);

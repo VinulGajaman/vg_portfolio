@@ -14,7 +14,7 @@ import { SkillsParticles } from "@/components/ui/SkillsParticles";
 import { SkillsTunnel } from "@/components/ui/SkillsTunnel";
 import { SkillsLed } from "@/components/ui/SkillsLed";
 import { SkillsAscii } from "@/components/ui/SkillsAscii";
-import { SkillsRadar } from "@/components/ui/SkillsRadar";
+import { SkillsGlitch } from "@/components/ui/SkillsGlitch";
 import { stack, stackTiles, type StackTile } from "@/content/stack";
 import { stackLogos } from "@/content/stack-logos";
 import { cn } from "@/lib/cn";
@@ -57,8 +57,8 @@ function Tile({ tile }: { tile: StackTile }) {
  * Skills section variant while Vinul compares ideas. Liked so far: "board" (split-flap) and
  * "particles" (particle morph). Delete the losers once one is chosen.
  */
-const SKILLS_VARIANT: "flashlight" | "board" | "particles" | "tunnel" | "led" | "ascii" | "radar" = "radar";
-const Skills = { flashlight: SkillsFlashlight, board: SkillsBoard, particles: SkillsParticles, tunnel: SkillsTunnel, led: SkillsLed, ascii: SkillsAscii, radar: SkillsRadar }[SKILLS_VARIANT];
+const SKILLS_VARIANT: "flashlight" | "board" | "particles" | "tunnel" | "led" | "ascii" | "glitch" = "glitch";
+const Skills = { flashlight: SkillsFlashlight, board: SkillsBoard, particles: SkillsParticles, tunnel: SkillsTunnel, led: SkillsLed, ascii: SkillsAscii, glitch: SkillsGlitch }[SKILLS_VARIANT];
 
 export default function TechStack() {
   return (

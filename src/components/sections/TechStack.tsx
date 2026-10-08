@@ -2,7 +2,7 @@
 
 /**
  * Tech Stack `#stack` (DESIGN.md §3.4, portvio Partners). Decorative logo marquee (aria-hidden,
- * 50px/s with velocity skew; inline monochrome marks from content/stack-logos.ts) plus the <SkillsIndex> kinetic type wall below it.
+ * 50px/s with velocity skew; inline monochrome marks from content/stack-logos.ts) plus the <SkillsIndex> bento grid below it.
  */
 import { Marquee } from "@/components/motion/Marquee";
 import { Reveal } from "@/components/motion/Reveal";
@@ -69,8 +69,9 @@ export default function TechStack() {
         </Marquee>
       </div>
 
-      {/* Full-bleed type wall; its labels sit in the content column. */}
-      <SkillsIndex className="mt-14 md:mt-20" />
+      <div className="container-site mt-12 md:mt-16">
+        <SkillsIndex />
+      </div>
     </section>
   );
 }

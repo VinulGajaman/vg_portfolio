@@ -1,100 +1,98 @@
 "use client";
 
 /**
- * <SkillsIndex>: the CV's full skills list as a kinetic type wall (DESIGN.md §3.4, revised per
- * Vinul). One full-bleed row per CV group, separated by 1px hairlines:
- *   - Label line (in the content column): orange "01", the group name in small uppercase, and
- *     "NN tools" at the far side.
- *   - A <Marquee> of the skills in Clash 600 uppercase (40 / 64 / 88px) with orange sparkle
- *     separators. Rows alternate: odd rows solid white running left, even rows outlined
- *     (1px white stroke) running right, at 45 / 55 px/s, with the site's scroll-velocity boost
- *     and skew.
- * Hover (fine pointers): the row eases to .25× speed, outlined words fill white, the label turns
- * white and an orange hairline draws across the top (scaleX 0 → 1, 0.7s).
- * Scroll (once per row): the row rises yPercent 100 → 0 inside a mask (1.0s expo.out), the
- * label fades up, rows staggered by their own trigger points.
- * Reduced motion: Marquee renders a static wrapped row; no rise.
+ * <SkillsIndex>: the CV's full skills list as a bento grid (DESIGN.md §3.4, revised per Vinul).
+ * Seven cards (#232222, radius 16, 1px line, edge light) on a 12-column grid at desktop:
+ * 5 + 7 / 7 + 5 / 4 + 4 + 4; two columns on tablet (the last card spans both); one on phone.
+ * Each card: orange "01" + "NN tools", the group in Clash uppercase, the skills as outline chips,
+ * and a giant outlined ghost number in the corner.
+ * Motion:
+ *   - Scroll: cards rise with <Reveal card> (y 30, scale .8 → 1), delays .2 / .3 / .4 by column.
+ *   - Hover (fine pointers): a 4° <Tilt>, an orange radial spotlight that follows the cursor
+ *     (CSS vars, opacity 0 → 1), the border warms to accent/40, the ghost number drifts up and
+ *     brightens, and the chips light up left to right (transition-delay i × 35ms).
+ * Reduced motion: no tilt, no rise; hover colour changes only.
  */
-import { useRef } from "react";
+import type { PointerEvent } from "react";
 import { skillGroups } from "@/content/stack";
-import { gsap, onceInView, useMotion } from "@/lib/gsap";
-import { Marquee } from "@/components/motion/Marquee";
-import { Sparkle } from "@/components/ui/Sparkle";
+import { Reveal } from "@/components/motion/Reveal";
+import { Tilt } from "@/components/motion/Tilt";
+import { STAGGER } from "@/lib/motion-tokens";
 import { cn } from "@/lib/cn";
 
 const pad = (n: number) => String(n).padStart(2, "0");
-const SIZE = "text-[40px] md:text-[64px] lg:text-[88px]";
+
+/** Column spans per card at desktop (12 cols) and tablet (2 cols). */
+const SPANS = [
+  "lg:col-span-5",
+  "lg:col-span-7",
+  "lg:col-span-7",
+  "lg:col-span-5",
+  "lg:col-span-4",
+  "lg:col-span-4",
+  "md:col-span-2 lg:col-span-4",
+];
+
+/** Column index at desktop, for the reveal delay. */
+const COLUMN = [0, 1, 0, 1, 0, 1, 2];
+
+function track(e: PointerEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+}
 
 export function SkillsIndex({ className }: { className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useMotion(
-    ({ reduce }) => {
-      const root = ref.current;
-      if (!root || reduce) return;
-      root.querySelectorAll<HTMLElement>("[data-wall-row]").forEach((row) => {
-        const inner = row.querySelector<HTMLElement>("[data-wall-inner]");
-        const label = row.querySelector<HTMLElement>("[data-wall-label]");
-        gsap.set(inner, { yPercent: 100 });
-        gsap.set(label, { autoAlpha: 0, y: 10 });
-        const tl = gsap
-          .timeline({ paused: true })
-          .to(inner, { yPercent: 0, duration: 1, ease: "expo.out" }, 0)
-          .to(label, { autoAlpha: 1, y: 0, duration: 0.6, ease: "out" }, 0.1);
-        onceInView(row, () => tl.play(), { settle: () => tl.progress(1) });
-      });
-    },
-    { scope: ref },
-  );
-
   return (
-    <div ref={ref} className={cn("flex flex-col border-b border-line", className)}>
-      {skillGroups.map((g, i) => {
-        const outlined = i % 2 === 1;
-        return (
-          <div key={g.label} data-wall-row="" className="group relative border-t border-line py-5 md:py-7">
-            <span
-              aria-hidden
-              className="absolute inset-x-0 -top-px h-px origin-left scale-x-0 bg-accent transition-transform duration-700 ease-out pointer-fine:group-hover:scale-x-100"
-            />
-            <div data-wall-label="" className="container-site mb-2 flex items-center gap-3 md:mb-3">
-              <span className="type-small tabular text-accent">{pad(i + 1)}</span>
-              <h3 className="type-small uppercase tracking-[.08em] text-ink-soft transition-colors duration-300 pointer-fine:group-hover:text-ink">
+    <div className={cn("grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-12", className)}>
+      {skillGroups.map((g, i) => (
+        <Reveal key={g.label} variant="card" delay={STAGGER.siblings[COLUMN[i]]} className={cn("min-w-0", SPANS[i])}>
+          <Tilt max={4} className="h-full">
+            <article
+              onPointerMove={track}
+              className="group border-overlay edge-light relative flex h-full min-h-[240px] flex-col overflow-hidden rounded-2xl bg-surface p-6 after:transition-colors after:duration-300 after:ease-out pointer-fine:hover:after:border-accent/40 md:min-h-[280px] md:p-8 lg:min-h-[300px] lg:p-9"
+            >
+              {/* Cursor spotlight */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-out pointer-fine:group-hover:opacity-100"
+                style={{
+                  background:
+                    "radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(246,88,2,.14), transparent 60%)",
+                }}
+              />
+              {/* Ghost number */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -bottom-6 -right-2 select-none font-display text-[120px] font-bold leading-none text-transparent opacity-60 transition-[transform,opacity] duration-700 ease-out [-webkit-text-stroke:1px_rgba(255,255,255,.12)] pointer-fine:group-hover:-translate-y-2 pointer-fine:group-hover:opacity-100 md:text-[150px] lg:text-[170px]"
+              >
+                {pad(i + 1)}
+              </span>
+
+              <div className="relative flex items-center justify-between">
+                <span className="type-small tabular text-accent">{pad(i + 1)}</span>
+                <span className="type-small tabular text-ink-faint">{pad(g.items.length)} tools</span>
+              </div>
+
+              <h3 className="relative mt-8 font-display text-[26px] font-semibold uppercase leading-[1.05] text-ink md:mt-10 md:text-[30px] lg:text-[34px]">
                 {g.label}
               </h3>
-              <span className="type-small tabular ml-auto text-ink-faint">{pad(g.items.length)} tools</span>
-            </div>
-            <div className="overflow-hidden">
-              <div data-wall-inner="">
-                <Marquee
-                  speed={outlined ? 55 : 45}
-                  gap={0}
-                  direction={outlined ? -1 : 1}
-                  hoverSlow={0.25}
-                  mask="tiles"
-                  label={g.label}
-                >
-                  {g.items.map((item) => (
-                    <li key={item} className={cn("flex items-center font-display font-semibold uppercase", SIZE)}>
-                      <span
-                        className={cn(
-                          "whitespace-nowrap px-[.3em] leading-[1.1] transition-colors duration-500 ease-out",
-                          outlined
-                            ? "text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,.55)] pointer-fine:group-hover:text-ink"
-                            : "text-ink",
-                        )}
-                      >
-                        {item}
-                      </span>
-                      <Sparkle className="w-[.3em]" />
-                    </li>
-                  ))}
-                </Marquee>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+
+              <ul className="relative mt-auto flex flex-wrap gap-2 pt-8">
+                {g.items.map((item, j) => (
+                  <li
+                    key={item}
+                    className="type-body whitespace-nowrap rounded-pill border border-line bg-canvas/40 px-[14px] py-[6px] text-ink-soft transition-colors duration-300 ease-out pointer-fine:group-hover:border-white/25 pointer-fine:group-hover:text-ink"
+                    style={{ transitionDelay: `${j * 35}ms` }}
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </Tilt>
+        </Reveal>
+      ))}
     </div>
   );
 }

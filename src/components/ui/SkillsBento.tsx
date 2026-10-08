@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * <SkillsIndex>: the CV's full skills list as a bento grid (DESIGN.md §3.4, revised per Vinul).
+ * <SkillsBento>: the CV's full skills list as a bento grid (DESIGN.md §3.4, revised per Vinul).
  * Seven cards (#232222, radius 16, 1px line, edge light) on a 12-column grid at desktop:
  * 5 + 7 / 7 + 5 / 4 + 4 + 4; two columns on tablet (the last card spans both); one on phone.
  * Each card: orange "01" + "NN tools", the group in Clash uppercase, the skills as outline chips,
@@ -42,7 +42,7 @@ function track(e: PointerEvent<HTMLElement>) {
   e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
 }
 
-export function SkillsIndex({ className }: { className?: string }) {
+export function SkillsBento({ className }: { className?: string }) {
   return (
     <div className={cn("grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-12", className)}>
       {skillGroups.map((g, i) => (

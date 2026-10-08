@@ -2,13 +2,14 @@
 
 /**
  * Tech Stack `#stack` (DESIGN.md §3.4, portvio Partners). Decorative logo marquee (aria-hidden,
- * 50px/s with velocity skew; inline monochrome marks from content/stack-logos.ts) plus the <SkillsIndex> bento grid below it.
+ * 50px/s with velocity skew; inline monochrome marks from content/stack-logos.ts) plus the skills block below it (see SKILLS_VARIANT).
  */
 import { Marquee } from "@/components/motion/Marquee";
 import { Reveal } from "@/components/motion/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
-import { SkillsIndex } from "@/components/ui/SkillsIndex";
+import { SkillsBento } from "@/components/ui/SkillsBento";
+import { SkillsTerminal } from "@/components/ui/SkillsTerminal";
 import { stack, stackTiles, type StackTile } from "@/content/stack";
 import { stackLogos } from "@/content/stack-logos";
 import { cn } from "@/lib/cn";
@@ -47,6 +48,13 @@ function Tile({ tile }: { tile: StackTile }) {
   );
 }
 
+/**
+ * Skills section variant while Vinul compares ideas. "bento" is the approved fallback;
+ * delete the losing variants once one is chosen.
+ */
+const SKILLS_VARIANT: "bento" | "terminal" = "terminal";
+const Skills = { bento: SkillsBento, terminal: SkillsTerminal }[SKILLS_VARIANT];
+
 export default function TechStack() {
   return (
     <section id="stack" aria-labelledby="stack-title" className="section-layer px-0 pb-10 pt-[60px]">
@@ -70,7 +78,7 @@ export default function TechStack() {
       </div>
 
       <div className="container-site mt-12 md:mt-16">
-        <SkillsIndex />
+        <Skills />
       </div>
     </section>
   );

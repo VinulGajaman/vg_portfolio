@@ -15,43 +15,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { skillGroups } from "@/content/stack";
 import { useReducedMotion } from "@/lib/hooks";
 import { cn } from "@/lib/cn";
+import { Decode } from "@/components/ui/Decode";
 
 const CYCLE_MS = 4000;
 const BURST_MS = 650;
-const GLYPHS = "!<>-_\\/[]{}—=+*^?#%&01";
 const pad = (n: number) => String(n).padStart(2, "0");
-
-/** Text that decodes from random glyphs into `text`, left to right, whenever `text` changes. */
-function Decode({ text, delay = 0, enabled }: { text: string; delay?: number; enabled: boolean }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (!enabled) {
-      el.textContent = text;
-      return;
-    }
-    const start = performance.now() + delay;
-    const dur = 420 + text.length * 22;
-    let raf = 0;
-    const tick = (now: number) => {
-      const t = (now - start) / dur;
-      if (t >= 1) {
-        el.textContent = text;
-        return;
-      }
-      const done = Math.max(0, Math.floor(t * text.length));
-      let out = text.slice(0, done);
-      for (let i = done; i < text.length; i++)
-        out += text[i] === " " ? " " : t < 0 && i > 0 ? "" : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
-      el.textContent = out || " ";
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [text, delay, enabled]);
-  return <span ref={ref}>{text}</span>;
-}
 
 export function SkillsGlitch({ className }: { className?: string }) {
   const [active, setActive] = useState(0);

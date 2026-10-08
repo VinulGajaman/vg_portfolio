@@ -9,6 +9,9 @@
  *     Spare particles fade out and sink. Spring 0.055, damping 0.84 per frame.
  *   - Pointer: the mouse repels particles within 90px; they spring back when it leaves.
  *     Click / tap the canvas for the next group.
+ *   - Transition: each change fires a ~650ms glitch on the canvas while the particles swarm —
+ *     red / cyan channel split, horizontal slices shifted sideways, orange noise bars — and the
+ *     skill chips decode from random glyphs (the glitch-signal design's effect).
  *   - Manual (nothing covers the word): click / tap the left or right half of the stage for
  *     previous / next (the custom cursor shows "← Prev" / "Next →"), drag / swipe sideways
  *     (> 40px; particles fly off in the swipe direction), left / right keys when focused, or the
@@ -25,6 +28,7 @@ import { skillGroups } from "@/content/stack";
 import { gsap } from "@/lib/gsap";
 import { useReducedMotion } from "@/lib/hooks";
 import { cn } from "@/lib/cn";
+import { Decode } from "@/components/ui/Decode";
 
 const CYCLE_MS = 4000;
 const MAX = 2600;
@@ -166,10 +170,16 @@ export function SkillsParticles({ className }: { className?: string }) {
         p.vy += (Math.random() - 0.5) * 10;
       });
     };
+    let glitchAt = -1e9;
     morphRef.current = (text: string) => {
+      const changed = text !== textRef.current;
       textRef.current = text;
       morph(text);
+      if (changed) glitchAt = performance.now();
     };
+    // Reusable buffer for slice shifting
+    const buf = document.createElement("canvas");
+    const bctx = buf.getContext("2d")!;
 
     const resize = () => {
       W = Math.round(canvas.clientWidth);
@@ -181,36 +191,84 @@ export function SkillsParticles({ className }: { className?: string }) {
     };
 
     const size = () => (W < 600 ? 1.6 : 2.2);
+    const GLITCH_MS = 650;
+    const draw = (color: boolean, ox: number, fill?: string) => {
+      const s = size();
+      ctx.fillStyle = fill ?? (color ? "#F65802" : "#FFFFFF");
+      for (const p of parts) {
+        if (p.o !== color || p.a < 0.02) continue;
+        ctx.globalAlpha = p.a;
+        ctx.fillRect(p.x + ox, p.y, s, s);
+      }
+    };
+
     const loop = () => {
       raf = requestAnimationFrame(loop);
       if (!visible) return;
-      ctx.clearRect(0, 0, W, H);
-      const s = size();
       const R = 90;
-      for (const color of [false, true]) {
-        ctx.fillStyle = color ? "#F65802" : "#FFFFFF";
-        for (const p of parts) {
-          if (p.o !== color) continue;
-          p.vx = (p.vx + (p.tx - p.x) * 0.055) * 0.84;
-          p.vy = (p.vy + (p.ty - p.y) * 0.055) * 0.84;
-          const dx = p.x - mouse.x;
-          const dy = p.y - mouse.y;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < R * R) {
-            const d = Math.sqrt(d2) || 1;
-            const f = (1 - d / R) * 5;
-            p.vx += (dx / d) * f;
-            p.vy += (dy / d) * f;
+      for (const p of parts) {
+        p.vx = (p.vx + (p.tx - p.x) * 0.055) * 0.84;
+        p.vy = (p.vy + (p.ty - p.y) * 0.055) * 0.84;
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < R * R) {
+          const d = Math.sqrt(d2) || 1;
+          const f = (1 - d / R) * 5;
+          p.vx += (dx / d) * f;
+          p.vy += (dy / d) * f;
+        }
+        p.x += p.vx;
+        p.y += p.vy;
+        p.a += (p.ta - p.a) * 0.08;
+      }
+
+      ctx.clearRect(0, 0, W, H);
+      const t = (performance.now() - glitchAt) / GLITCH_MS;
+      const k = t >= 0 && t < 1 ? Math.sin(t * Math.PI) : 0;
+
+      if (k > 0) {
+        // channel split
+        const split = 10 * k;
+        ctx.globalCompositeOperation = "lighter";
+        draw(false, -split, "#ff2a3d");
+        draw(true, -split, "#ff2a3d");
+        draw(false, split, "#20e3ff");
+        draw(true, split, "#20e3ff");
+        ctx.globalCompositeOperation = "source-over";
+      }
+      draw(false, 0);
+      draw(true, 0);
+      ctx.globalAlpha = 1;
+
+      if (k > 0 && Math.random() < 0.8) {
+        // slices: copy a band out, clear it, paste it shifted sideways
+        const bands = 2 + Math.floor(Math.random() * 5);
+        for (let i = 0; i < bands; i++) {
+          const y = Math.random() * H;
+          const h = 4 + Math.random() * 34;
+          const shift = (Math.random() - 0.5) * 120 * k;
+          const sy = Math.floor(y * dpr);
+          const sh = Math.max(1, Math.floor(h * dpr));
+          if (buf.width !== canvas.width || buf.height !== sh) {
+            buf.width = canvas.width;
+            buf.height = sh;
           }
-          p.x += p.vx;
-          p.y += p.vy;
-          p.a += (p.ta - p.a) * 0.08;
-          if (p.a < 0.02) continue;
-          ctx.globalAlpha = p.a;
-          ctx.fillRect(p.x, p.y, s, s);
+          bctx.clearRect(0, 0, buf.width, buf.height);
+          bctx.drawImage(canvas, 0, sy, canvas.width, sh, 0, 0, canvas.width, sh);
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, sy, canvas.width, sh);
+          ctx.drawImage(buf, Math.round(shift * dpr), sy);
+          ctx.restore();
+        }
+        // noise bars
+        const bars = 1 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < bars; i++) {
+          ctx.fillStyle = Math.random() < 0.6 ? `rgba(246,88,2,${0.5 * k})` : `rgba(255,255,255,${0.25 * k})`;
+          ctx.fillRect(0, Math.random() * H, W, 1 + Math.random() * 2);
         }
       }
-      ctx.globalAlpha = 1;
     };
 
     const onMove = (e: PointerEvent) => {
@@ -442,12 +500,12 @@ export function SkillsParticles({ className }: { className?: string }) {
           </div>
         </div>
         <ul ref={chipsRef} key={active} className="mt-5 flex flex-wrap gap-2">
-          {group.items.map((item) => (
+          {group.items.map((item, j) => (
             <li
               key={item}
               className="whitespace-nowrap rounded-pill bg-ink px-4 py-2 font-display text-[14px] font-semibold uppercase text-canvas md:text-[16px]"
             >
-              {item}
+              <Decode text={item} delay={60 + j * 70} enabled={!reduce} />
             </li>
           ))}
         </ul>

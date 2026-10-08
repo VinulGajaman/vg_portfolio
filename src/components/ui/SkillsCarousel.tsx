@@ -9,8 +9,8 @@
  * Scrolling the track rotates the ring one card per ~33vh (scrub .8): each card gets
  * rotateY(i·step − rot) translateZ(R) with R fitted to the card width, opacity
  * .12 + .88·cos(angle)^1.5 and z-order by facing, so the front card is bright and the sides turn
- * away into the dark (backfaces hidden). A "03 / 07 · Group" counter and seven dots track the
- * front card. Entrance: the ring rises from scale .85 and fades in once in view.
+ * away into the dark (backfaces hidden). All cards share one fixed height per breakpoint
+ * (400 / 440px). Seven progress dots track the front card. Entrance: the ring rises from scale .85 and fades in once in view.
  * Reduced motion: no track, no 3D; the cards render as a plain grid.
  */
 import { useRef } from "react";
@@ -25,8 +25,6 @@ const STEP = 360 / N;
 export function SkillsCarousel({ className }: { className?: string }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const countRef = useRef<HTMLSpanElement>(null);
-  const nameRef = useRef<HTMLSpanElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);
 
   useMotion(
@@ -59,8 +57,6 @@ export function SkillsCarousel({ className }: { className?: string }) {
         const idx = ((Math.round(state.rot / STEP) % N) + N) % N;
         if (idx !== front) {
           front = idx;
-          if (countRef.current) countRef.current.textContent = `${pad(idx + 1)} / ${pad(N)}`;
-          if (nameRef.current) nameRef.current.textContent = skillGroups[idx].label;
           dots.forEach((d, i) => d.classList.toggle("is-on", i === idx));
           cards.forEach((c, i) => c.classList.toggle("is-front", i === idx));
         }
@@ -116,7 +112,7 @@ export function SkillsCarousel({ className }: { className?: string }) {
             {skillGroups.map((g, i) => (
               <article
                 key={g.label}
-                className="group border-overlay edge-light absolute left-1/2 top-1/2 flex min-h-[380px] w-[270px] flex-col overflow-hidden rounded-2xl bg-surface p-6 [backface-visibility:hidden] after:transition-colors after:duration-500 md:min-h-[440px] md:w-[360px] md:p-8 lg:w-[380px] [&.is-front]:after:border-accent/40 motion-reduce:static motion-reduce:w-auto"
+                className="group border-overlay edge-light absolute left-1/2 top-1/2 flex h-[400px] w-[270px] flex-col overflow-hidden rounded-2xl bg-surface p-6 [backface-visibility:hidden] after:transition-colors after:duration-500 md:h-[440px] md:w-[360px] md:p-8 lg:w-[380px] [&.is-front]:after:border-accent/40 motion-reduce:static motion-reduce:w-auto"
               >
                 <span
                   aria-hidden
@@ -151,17 +147,8 @@ export function SkillsCarousel({ className }: { className?: string }) {
           </div>
         </div>
 
-        {/* Counter + dots */}
-        <div aria-hidden className="mt-10 flex flex-col items-center gap-4 md:mt-14 motion-reduce:hidden">
-          <p className="type-small tabular text-ink-soft">
-            <span ref={countRef} className="text-accent">
-              01 / {pad(N)}
-            </span>
-            <span className="text-ink-faint"> · </span>
-            <span ref={nameRef} className="text-ink">
-              {skillGroups[0].label}
-            </span>
-          </p>
+        {/* Progress dots */}
+        <div aria-hidden className="mt-10 flex flex-col items-center md:mt-14 motion-reduce:hidden">
           <div ref={dotsRef} className="flex gap-2">
             {skillGroups.map((g) => (
               <span

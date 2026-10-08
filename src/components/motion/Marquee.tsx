@@ -4,7 +4,8 @@
  * <Marquee speed gap mask velocity reverse> (DESIGN.md §2.5, U7).
  * Linear, leftward, seamless. The item set is duplicated until the track is ≥ 2× the container
  * (duplicates aria-hidden), driven by gsap.ticker with a wrapped x and permanent will-change on
- * the track. No hover slow-down (portvio).
+ * the track. No hover slow-down by default (portvio); `hoverSlow` eases the speed to that
+ * multiplier while a mouse is over the row. `direction` -1 runs it rightward.
  * Velocity: speed × (1 + clamp(|v|/1000, 0, 3)), skewX = clamp(v/300, −6, 6)°, both smoothed
  * with quickTo (0.5s power3.out) and decaying to rest; `reverse` flips direction on scroll-up.
  * Pauses off-screen, when the tab is hidden and when the hero is covered. Phone: runs, velocity
@@ -28,6 +29,10 @@ export type MarqueeProps = {
   mask?: "chips" | "tiles" | "none";
   velocity?: boolean;
   reverse?: boolean;
+  /** Base direction: 1 leftward (default), -1 rightward. */
+  direction?: 1 | -1;
+  /** Speed multiplier while a mouse hovers the row (e.g. .25); 1 = no slow-down. */
+  hoverSlow?: number;
   className?: string;
   setClassName?: string;
   /** Accessible label for the list. */
@@ -41,6 +46,8 @@ export function Marquee({
   mask = "none",
   velocity = true,
   reverse = false,
+  direction = 1,
+  hoverSlow = 1,
   className,
   setClassName,
   label,
@@ -82,10 +89,17 @@ export function Marquee({
       let x = 0;
       let visible = true;
       let covered = false;
-      const state = { mult: 1, dir: 1 };
+      const state = { mult: 1, dir: direction, hover: 1 };
       const useVel = velocity && !isPhone && isPlus;
       const multTo = gsap.quickTo(state, "mult", { duration: 0.5, ease: "power3.out" });
       const dirTo = gsap.quickTo(state, "dir", { duration: 0.5, ease: "power3.out" });
+      const hoverTo = gsap.quickTo(state, "hover", { duration: 0.8, ease: "power3.out" });
+      const onEnter = (e: PointerEvent) => e.pointerType === "mouse" && hoverTo(hoverSlow);
+      const onLeave = () => hoverTo(1);
+      if (hoverSlow !== 1) {
+        root.addEventListener("pointerenter", onEnter);
+        root.addEventListener("pointerleave", onLeave);
+      }
       const skewTo = gsap.quickTo(track, "skewX", { duration: 0.5, ease: "power3.out" });
       const setX = gsap.quickSetter(track, "x", "px") as (v: number) => void;
       const clampMult = gsap.utils.clamp(0, 3);
@@ -97,10 +111,10 @@ export function Marquee({
           const v = getScrollVelocity();
           multTo(1 + clampMult(Math.abs(v) / 1000));
           skewTo(clampSkew(v / 300));
-          if (reverse) dirTo(v < -20 ? -1 : 1);
+          if (reverse) dirTo(v < -20 ? -direction : direction);
         }
         const dt = Math.min(deltaMs, 64) / 1000;
-        x -= state.dir * speed * state.mult * dt;
+        x -= state.dir * speed * state.mult * state.hover * dt;
         if (x <= -W) x += W;
         else if (x > 0) x -= W;
         setX(x);
@@ -122,13 +136,15 @@ export function Marquee({
 
       return () => {
         gsap.ticker.remove(tick);
+        root.removeEventListener("pointerenter", onEnter);
+        root.removeEventListener("pointerleave", onLeave);
         io.disconnect();
         ro.disconnect();
         window.removeEventListener("vg:hero-covered", onCovered);
         gsap.set(track, { x: 0, skewX: 0 });
       };
     },
-    { scope: rootRef, dependencies: [speed, velocity, reverse, copies] },
+    { scope: rootRef, dependencies: [speed, velocity, reverse, direction, hoverSlow, copies] },
   );
 
   const maskClass = mask === "chips" ? "mask-chips" : mask === "tiles" ? "mask-tiles" : "";

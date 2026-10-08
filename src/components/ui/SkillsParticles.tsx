@@ -9,6 +9,12 @@
  *     Spare particles fade out and sink. Spring 0.055, damping 0.84 per frame.
  *   - Pointer: the mouse repels particles within 90px; they spring back when it leaves.
  *     Click / tap the canvas for the next group.
+ *   - Manual (nothing covers the word): click / tap the left or right half of the stage for
+ *     previous / next (the custom cursor shows "← Prev" / "Next →"), drag / swipe sideways
+ *     (> 40px; particles fly off in the swipe direction), left / right keys when focused, or the
+ *     small arrow buttons beside the counter in the bottom bar.
+ *   - Progress: seven slim segments; the active one fills over CYCLE_MS and its animationend
+ *     advances (autoplay), paused off-screen and on hover; any manual move restarts it.
  *   - Autoplay every CYCLE_MS while on screen and not hovered. Long names wrap to two lines when a
  *     single line would be too small. Chips rise in (y 14, stagger .04) on each change.
  *   - The loop only runs while the card is on screen; it re-samples on resize and font load.
@@ -24,7 +30,17 @@ const CYCLE_MS = 4000;
 const MAX = 2600;
 const pad = (n: number) => String(n).padStart(2, "0");
 
-type P = { x: number; y: number; vx: number; vy: number; tx: number; ty: number; a: number; ta: number; o: boolean };
+type P = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  tx: number;
+  ty: number;
+  a: number;
+  ta: number;
+  o: boolean;
+};
 
 export function SkillsParticles({ className }: { className?: string }) {
   const [active, setActive] = useState(0);
@@ -37,22 +53,30 @@ export function SkillsParticles({ className }: { className?: string }) {
   const chipsRef = useRef<HTMLUListElement>(null);
   const morphRef = useRef<(text: string) => void>(() => {});
   const textRef = useRef(skillGroups[0].label);
+  const dirRef = useRef(1);
+  const swipeRef = useRef<{ x: number; y: number } | null>(null);
   const n = skillGroups.length;
   const group = skillGroups[active];
+  const running = inView && !hovered && !reduce;
+
+  const go = (dir: 1 | -1) => {
+    dirRef.current = dir;
+    setActive((a) => (a + dir + n) % n);
+  };
+  const goTo = (i: number) => {
+    dirRef.current = i >= active ? 1 : -1;
+    setActive(i);
+  };
 
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.3 });
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), {
+      threshold: 0.3,
+    });
     io.observe(el);
     return () => io.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (!inView || hovered || reduce) return;
-    const t = window.setTimeout(() => setActive((a) => (a + 1) % n), CYCLE_MS);
-    return () => window.clearTimeout(t);
-  }, [active, inView, hovered, reduce, n]);
 
   // Particle engine
   useEffect(() => {
@@ -97,12 +121,15 @@ export function SkillsParticles({ className }: { className?: string }) {
       o.textAlign = "center";
       o.textBaseline = "middle";
       const lh = size * 1.02;
-      lines.forEach((l, i) => o.fillText(l, W / 2, H / 2 + (i - (lines.length - 1) / 2) * lh));
+      lines.forEach((l, i) =>
+        o.fillText(l, W / 2, H / 2 + (i - (lines.length - 1) / 2) * lh),
+      );
       const data = o.getImageData(0, 0, W, H).data;
       const gap = W < 600 ? 3 : 5;
       const pts: [number, number][] = [];
       for (let y = 0; y < H; y += gap)
-        for (let x = 0; x < W; x += gap) if (data[(y * W + x) * 4 + 3] > 128) pts.push([x, y]);
+        for (let x = 0; x < W; x += gap)
+          if (data[(y * W + x) * 4 + 3] > 128) pts.push([x, y]);
       for (let i = pts.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pts[i], pts[j]] = [pts[j], pts[i]];
@@ -114,7 +141,17 @@ export function SkillsParticles({ className }: { className?: string }) {
       if (!W || !H) return;
       const pts = sample(text);
       while (parts.length < pts.length)
-        parts.push({ x: Math.random() * W, y: H + 20, vx: 0, vy: 0, tx: 0, ty: 0, a: 0, ta: 0, o: Math.random() < 0.12 });
+        parts.push({
+          x: Math.random() * W,
+          y: H + 20,
+          vx: 0,
+          vy: 0,
+          tx: 0,
+          ty: 0,
+          a: 0,
+          ta: 0,
+          o: Math.random() < 0.12,
+        });
       parts.forEach((p, i) => {
         if (i < pts.length) {
           p.tx = pts[i][0];
@@ -125,7 +162,7 @@ export function SkillsParticles({ className }: { className?: string }) {
           p.ty = H + 30;
           p.ta = 0;
         }
-        p.vx += (Math.random() - 0.5) * 10;
+        p.vx += (Math.random() - 0.5) * 10 - dirRef.current * 9;
         p.vy += (Math.random() - 0.5) * 10;
       });
     };
@@ -185,8 +222,9 @@ export function SkillsParticles({ className }: { className?: string }) {
     const onLeave = () => {
       mouse.x = mouse.y = -9999;
     };
-    canvas.addEventListener("pointermove", onMove);
-    canvas.addEventListener("pointerleave", onLeave);
+    const stage = canvas.parentElement ?? canvas;
+    stage.addEventListener("pointermove", onMove);
+    stage.addEventListener("pointerleave", onLeave);
 
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(canvas);
@@ -206,8 +244,8 @@ export function SkillsParticles({ className }: { className?: string }) {
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();
-      canvas.removeEventListener("pointermove", onMove);
-      canvas.removeEventListener("pointerleave", onLeave);
+      stage.removeEventListener("pointermove", onMove);
+      stage.removeEventListener("pointerleave", onLeave);
     };
   }, [reduce]);
 
@@ -216,7 +254,11 @@ export function SkillsParticles({ className }: { className?: string }) {
     morphRef.current(group.label);
     const chips = chipsRef.current?.children;
     if (chips && !reduce)
-      gsap.fromTo(chips, { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6, ease: "expo.out", stagger: 0.04 });
+      gsap.fromTo(
+        chips,
+        { y: 14, autoAlpha: 0 },
+        { y: 0, autoAlpha: 1, duration: 0.6, ease: "expo.out", stagger: 0.04 },
+      );
   }, [group.label, reduce]);
 
   return (
@@ -224,22 +266,56 @@ export function SkillsParticles({ className }: { className?: string }) {
       ref={boxRef}
       onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
       onPointerLeave={() => setHovered(false)}
+      tabIndex={0}
+      aria-label="Skills"
+      onKeyDown={(e) => {
+        if (e.key === "ArrowRight") go(1);
+        else if (e.key === "ArrowLeft") go(-1);
+      }}
       className={cn(
-        "border-overlay edge-light relative overflow-hidden rounded-2xl bg-[#0f0e0e]",
+        "border-overlay edge-light relative overflow-hidden rounded-2xl bg-[#0f0e0e] outline-none focus-visible:ring-2 focus-visible:ring-accent",
         className,
       )}
     >
       <span
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-2/3"
-        style={{ background: "radial-gradient(50% 80% at 50% 40%, rgba(246,88,2,.10), transparent)" }}
+        style={{
+          background:
+            "radial-gradient(50% 80% at 50% 40%, rgba(246,88,2,.10), transparent)",
+        }}
       />
       {/* Hidden probe that resolves the Clash Display font-family for the canvas */}
-      <span ref={fontRef} aria-hidden className="pointer-events-none absolute font-display opacity-0">
+      <span
+        ref={fontRef}
+        aria-hidden
+        className="pointer-events-none absolute font-display opacity-0"
+      >
         A
       </span>
 
-      <div className="relative">
+      <div
+        className="relative cursor-grab touch-pan-y select-none active:cursor-grabbing"
+        onPointerDown={(e) => {
+          swipeRef.current = { x: e.clientX, y: e.clientY };
+        }}
+        onPointerUp={(e) => {
+          const st = swipeRef.current;
+          swipeRef.current = null;
+          if (!st) return;
+          const dx = e.clientX - st.x;
+          const dy = e.clientY - st.y;
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy))
+            go(dx < 0 ? 1 : -1);
+          else if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
+            const r = e.currentTarget.getBoundingClientRect();
+            go(e.clientX - r.left < r.width / 2 ? -1 : 1);
+          }
+        }}
+        onPointerCancel={() => {
+          swipeRef.current = null;
+        }}
+      >
         {reduce ? (
           <p className="grid h-[260px] place-items-center px-6 text-center font-display text-[40px] font-semibold uppercase leading-none text-ink md:h-[380px] md:text-[80px]">
             {group.label}
@@ -248,30 +324,122 @@ export function SkillsParticles({ className }: { className?: string }) {
           <canvas
             ref={canvasRef}
             aria-hidden
-            onClick={() => setActive((a) => (a + 1) % n)}
-            className="block h-[260px] w-full cursor-pointer md:h-[380px] lg:h-[420px]"
+            className="block h-[260px] w-full md:h-[380px] lg:h-[420px]"
           />
         )}
         <h3 className="sr-only">{group.label}</h3>
+
+        {/* Hint (top-right, clear of the word) */}
+        <span className="type-small pointer-events-none absolute right-5 top-4 text-ink-faint md:right-8 md:top-6">
+          <span className="pointer-fine:hidden">Swipe or tap a side</span>
+          <span className="hidden pointer-fine:inline">
+            Click a side or drag
+          </span>
+        </span>
+
+        {/* Invisible halves: only drive the custom cursor label (clicks bubble to the stage) */}
+        <span
+          aria-hidden
+          data-cursor="open"
+          data-cursor-label="← Prev"
+          className="absolute inset-y-0 left-0 w-1/2"
+        />
+        <span
+          aria-hidden
+          data-cursor="open"
+          data-cursor-label="Next →"
+          className="absolute inset-y-0 right-0 w-1/2"
+        />
       </div>
 
       <div className="relative border-t border-line px-5 py-6 md:px-10 md:py-8">
-        <div role="tablist" aria-label="Skill groups" className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:flex-wrap">
-          {skillGroups.map((g, i) => (
-            <button
-              key={g.label}
-              type="button"
-              role="tab"
-              aria-selected={i === active}
-              onClick={() => setActive(i)}
-              className={cn(
-                "type-small shrink-0 rounded-pill border px-3.5 py-1.5 transition-colors duration-300",
-                i === active ? "border-accent text-ink" : "border-line text-ink-faint pointer-fine:hover:text-ink-soft",
-              )}
-            >
-              <span className={cn("tabular", i === active && "text-accent")}>{pad(i + 1)}</span> {g.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex shrink-0 items-center gap-2">
+            {([-1, 1] as const).map((dir) => (
+              <button
+                key={dir}
+                type="button"
+                aria-label={
+                  dir < 0 ? "Previous skill group" : "Next skill group"
+                }
+                onClick={() => go(dir)}
+                className={cn(
+                  "group/arrow grid size-9 place-items-center overflow-hidden rounded-full border border-line text-ink transition-[background-color,border-color,color,scale] duration-300 active:scale-90 md:size-10",
+                  "pointer-fine:hover:border-accent pointer-fine:hover:bg-accent pointer-fine:hover:text-accent-ink",
+                  dir > 0 && "order-last",
+                )}
+              >
+                <span
+                  className={cn(
+                    "col-start-1 row-start-1 grid",
+                    dir < 0 && "rotate-180",
+                  )}
+                >
+                  {[0, 1].map((k) => (
+                    <svg
+                      key={k}
+                      viewBox="0 0 24 24"
+                      aria-hidden
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={cn(
+                        "col-start-1 row-start-1 size-4 transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)]",
+                        k === 0
+                          ? "pointer-fine:group-hover/arrow:translate-x-[200%]"
+                          : "-translate-x-[200%] pointer-fine:group-hover/arrow:translate-x-0",
+                      )}
+                    >
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  ))}
+                </span>
+              </button>
+            ))}
+            <span className="type-small tabular w-[56px] text-center text-ink-soft">
+              <span className="text-accent">{pad(active + 1)}</span> / {pad(n)}
+            </span>
+          </div>
+          {/* Progress segments: the active one fills as the autoplay timer; click to jump */}
+          <div
+            className="flex flex-1 gap-1.5"
+            role="group"
+            aria-label="Skill groups"
+          >
+            {skillGroups.map((g, i) => (
+              <button
+                key={g.label}
+                type="button"
+                aria-label={g.label}
+                aria-current={i === active}
+                onClick={() => goTo(i)}
+                className="group/seg relative h-6 flex-1"
+              >
+                <span className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 overflow-hidden rounded-full bg-line transition-[height] duration-300 pointer-fine:group-hover/seg:h-[5px]">
+                  <span
+                    key={i === active ? `on-${active}` : "off"}
+                    onAnimationEnd={i === active ? () => go(1) : undefined}
+                    className={cn(
+                      "absolute inset-0 origin-left rounded-full bg-accent",
+                      i < active ? "opacity-40" : i > active ? "scale-x-0" : "",
+                    )}
+                    style={
+                      i === active
+                        ? {
+                            animation: reduce
+                              ? "none"
+                              : `skill-progress ${CYCLE_MS}ms linear forwards`,
+                            animationPlayState: running ? "running" : "paused",
+                          }
+                        : undefined
+                    }
+                  />
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
         <ul ref={chipsRef} key={active} className="mt-5 flex flex-wrap gap-2">
           {group.items.map((item) => (

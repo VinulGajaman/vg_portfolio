@@ -59,7 +59,7 @@ function Tile({ tile }: { tile: StackTile }) {
  * Skills section variant while Vinul compares ideas. Liked so far: "board" (split-flap) and
  * "particles" (particle morph). Delete the losers once one is chosen.
  */
-const SKILLS_VARIANT: "flashlight" | "board" | "particles" | "tunnel" | "led" | "ascii" | "glitch" | "mosaic" | "shatter" = "shatter";
+const SKILLS_VARIANT: "flashlight" | "board" | "particles" | "tunnel" | "led" | "ascii" | "glitch" | "mosaic" | "shatter" = "particles";
 const Skills = { flashlight: SkillsFlashlight, board: SkillsBoard, particles: SkillsParticles, tunnel: SkillsTunnel, led: SkillsLed, ascii: SkillsAscii, glitch: SkillsGlitch, mosaic: SkillsMosaic, shatter: SkillsShatter }[SKILLS_VARIANT];
 
 export default function TechStack() {

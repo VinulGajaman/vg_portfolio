@@ -40,7 +40,8 @@ export default function TechStack() {
     <section id="stack" aria-labelledby="stack-title" className="section-layer px-0 pb-10 pt-[60px]">
       <Reveal delay={0.2} className="flex items-center justify-between gap-4 px-[var(--gutter)]">
         <Eyebrow animate={false}>{stack.eyebrow}</Eyebrow>
-        <h2 id="stack-title" className="type-body text-ink max-md:sr-only">
+        {/* Visually removed per Vinul; kept for screen readers as the section's heading. */}
+        <h2 id="stack-title" className="sr-only">
           {stack.centre}
         </h2>
         <ArrowIcon kind="hooked" size={24} className="text-ink" />

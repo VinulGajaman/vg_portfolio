@@ -14,8 +14,8 @@
  *     skill chips decode from random glyphs (the glitch-signal design's effect).
  *   - Manual (nothing covers the word): click / tap the left or right half of the stage for
  *     previous / next (the custom cursor shows "← Prev" / "Next →"), drag / swipe sideways
- *     (> 40px; particles fly off in the swipe direction), left / right keys when focused, or the
- *     small arrow buttons beside the counter in the bottom bar.
+ *     (> 40px; particles fly off in the swipe direction), left / right keys when focused, or a
+ *     progress segment. Touch: a finger moving over the word pushes the particles like the mouse.
  *   - Progress: seven slim segments; the active one fills over CYCLE_MS and its animationend
  *     advances (autoplay), paused off-screen and on hover; any manual move restarts it.
  *   - Autoplay every CYCLE_MS while on screen and not hovered. Long names wrap to two lines when a
@@ -32,7 +32,6 @@ import { Decode } from "@/components/ui/Decode";
 
 const CYCLE_MS = 4000;
 const MAX = 2600;
-const pad = (n: number) => String(n).padStart(2, "0");
 
 type P = {
   x: number;
@@ -271,8 +270,9 @@ export function SkillsParticles({ className }: { className?: string }) {
       }
     };
 
+    // Mouse, pen and touch all push the particles; a finger lifts / cancels → they spring back.
     const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse") return;
+      if (e.pointerType !== "mouse" && e.buttons === 0 && e.type === "pointermove") return;
       const r = canvas.getBoundingClientRect();
       mouse.x = e.clientX - r.left;
       mouse.y = e.clientY - r.top;
@@ -280,9 +280,15 @@ export function SkillsParticles({ className }: { className?: string }) {
     const onLeave = () => {
       mouse.x = mouse.y = -9999;
     };
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") onLeave();
+    };
     const stage = canvas.parentElement ?? canvas;
     stage.addEventListener("pointermove", onMove);
+    stage.addEventListener("pointerdown", onMove);
     stage.addEventListener("pointerleave", onLeave);
+    stage.addEventListener("pointerup", onUp);
+    stage.addEventListener("pointercancel", onLeave);
 
     const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
     io.observe(canvas);
@@ -303,7 +309,10 @@ export function SkillsParticles({ className }: { className?: string }) {
       io.disconnect();
       ro.disconnect();
       stage.removeEventListener("pointermove", onMove);
+      stage.removeEventListener("pointerdown", onMove);
       stage.removeEventListener("pointerleave", onLeave);
+      stage.removeEventListener("pointerup", onUp);
+      stage.removeEventListener("pointercancel", onLeave);
     };
   }, [reduce]);
 
@@ -412,54 +421,6 @@ export function SkillsParticles({ className }: { className?: string }) {
 
       <div className="relative border-t border-line px-5 py-6 md:px-10 md:py-8">
         <div className="flex items-center gap-4 md:gap-6">
-          <div className="flex shrink-0 items-center gap-2">
-            {([-1, 1] as const).map((dir) => (
-              <button
-                key={dir}
-                type="button"
-                aria-label={
-                  dir < 0 ? "Previous skill group" : "Next skill group"
-                }
-                onClick={() => go(dir)}
-                className={cn(
-                  "group/arrow grid size-9 place-items-center overflow-hidden rounded-full border border-line text-ink transition-[background-color,border-color,color,scale] duration-300 active:scale-90 md:size-10",
-                  "pointer-fine:hover:border-accent pointer-fine:hover:bg-accent pointer-fine:hover:text-accent-ink",
-                  dir > 0 && "order-last",
-                )}
-              >
-                <span
-                  className={cn(
-                    "col-start-1 row-start-1 grid",
-                    dir < 0 && "rotate-180",
-                  )}
-                >
-                  {[0, 1].map((k) => (
-                    <svg
-                      key={k}
-                      viewBox="0 0 24 24"
-                      aria-hidden
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={cn(
-                        "col-start-1 row-start-1 size-4 transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)]",
-                        k === 0
-                          ? "pointer-fine:group-hover/arrow:translate-x-[200%]"
-                          : "-translate-x-[200%] pointer-fine:group-hover/arrow:translate-x-0",
-                      )}
-                    >
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  ))}
-                </span>
-              </button>
-            ))}
-            <span className="type-small tabular w-[56px] text-center text-ink-soft">
-              <span className="text-accent">{pad(active + 1)}</span> / {pad(n)}
-            </span>
-          </div>
           {/* Progress segments: the active one fills as the autoplay timer; click to jump */}
           <div
             className="flex flex-1 gap-1.5"

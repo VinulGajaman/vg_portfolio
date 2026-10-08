@@ -2,32 +2,37 @@
 
 /**
  * Tech Stack `#stack` (DESIGN.md §3.4, portvio Partners). Decorative logo marquee (aria-hidden,
- * 50px/s with velocity skew) plus the interactive <SkillsIndex> panel below it.
+ * 50px/s with velocity skew; inline monochrome marks from content/stack-logos.ts) plus the interactive <SkillsIndex> panel below it.
  */
 import { Marquee } from "@/components/motion/Marquee";
 import { Reveal } from "@/components/motion/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
-import { MediaSlot } from "@/components/ui/MediaSlot";
 import { SkillsIndex } from "@/components/ui/SkillsIndex";
-import { useMedia } from "@/components/providers/MediaProvider";
 import { stack, stackTiles, type StackTile } from "@/content/stack";
+import { stackLogos } from "@/content/stack-logos";
+import { cn } from "@/lib/cn";
 
 function Tile({ tile }: { tile: StackTile }) {
-  const logo = useMedia(tile.logo);
+  const logo = stackLogos[tile.logo];
+  // Logo and label share the text tile's look: white at .7, orange at full opacity on hover.
+  const tint =
+    "text-ink opacity-70 transition-[opacity,color] duration-[180ms] ease-out group-hover:text-accent group-hover:opacity-100";
   return (
-    <div className="group border-overlay edge-light flex h-[120px] w-[160px] flex-col items-center justify-center gap-3 rounded-lg bg-surface after:transition-colors after:duration-[180ms] after:ease-out hover:after:border-accent/40 md:h-[160px] md:w-[220px] lg:h-[200px] lg:w-[280px]">
+    <div className="group border-overlay edge-light flex h-[120px] w-[160px] flex-col items-center justify-center gap-3 rounded-lg bg-surface after:transition-colors after:duration-[180ms] after:ease-out hover:after:border-accent/40 md:h-[160px] md:w-[220px] md:gap-4 lg:h-[200px] lg:w-[280px]">
       {logo ? (
         <>
-          <MediaSlot
-            id={tile.logo}
-            alt=""
-            className="h-7 w-[96px] text-ink opacity-70 transition-[opacity,color] duration-[180ms] ease-out group-hover:text-accent group-hover:opacity-100 md:h-10 md:w-[140px]"
+          <svg
+            viewBox={logo.viewBox}
+            fill="currentColor"
+            aria-hidden
+            className={cn("h-9 w-auto md:h-12 lg:h-14", tint)}
+            dangerouslySetInnerHTML={{ __html: logo.body }}
           />
-          <span className="type-small text-[12px] text-ink-soft">{tile.name}</span>
+          <span className={cn("type-small text-[12px] md:text-[13px]", tint)}>{tile.name}</span>
         </>
       ) : (
-        <span className="px-3 text-center font-display text-[18px] font-semibold md:text-[24px] leading-[1.1] text-ink opacity-70 transition-[opacity,color] duration-[180ms] ease-out group-hover:text-accent group-hover:opacity-100">
+        <span className={cn("px-3 text-center font-display text-[18px] font-semibold leading-[1.1] md:text-[24px]", tint)}>
           {tile.name}
         </span>
       )}

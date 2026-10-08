@@ -10,6 +10,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { SkillsBento } from "@/components/ui/SkillsBento";
 import { SkillsTerminal } from "@/components/ui/SkillsTerminal";
+import { SkillsOrbit } from "@/components/ui/SkillsOrbit";
 import { stack, stackTiles, type StackTile } from "@/content/stack";
 import { stackLogos } from "@/content/stack-logos";
 import { cn } from "@/lib/cn";
@@ -52,8 +53,8 @@ function Tile({ tile }: { tile: StackTile }) {
  * Skills section variant while Vinul compares ideas. "bento" is the approved fallback;
  * delete the losing variants once one is chosen.
  */
-const SKILLS_VARIANT: "bento" | "terminal" = "terminal";
-const Skills = { bento: SkillsBento, terminal: SkillsTerminal }[SKILLS_VARIANT];
+const SKILLS_VARIANT: "bento" | "terminal" | "orbit" = "orbit";
+const Skills = { bento: SkillsBento, terminal: SkillsTerminal, orbit: SkillsOrbit }[SKILLS_VARIANT];
 
 export default function TechStack() {
   return (

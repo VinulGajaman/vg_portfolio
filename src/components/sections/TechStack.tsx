@@ -29,7 +29,14 @@ function Tile({ tile }: { tile: StackTile }) {
             className={cn("h-9 w-auto md:h-12 lg:h-14", tint)}
             dangerouslySetInnerHTML={{ __html: logo.body }}
           />
-          <span className={cn("type-small text-[12px] md:text-[13px]", tint)}>{tile.name}</span>
+          <span
+            className={cn(
+              "whitespace-nowrap font-display text-[14px] font-semibold leading-[1.1] md:text-[17px] lg:text-[20px]",
+              tint,
+            )}
+          >
+            {tile.name}
+          </span>
         </>
       ) : (
         <span className={cn("px-3 text-center font-display text-[18px] font-semibold leading-[1.1] md:text-[24px]", tint)}>

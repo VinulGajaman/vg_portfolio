@@ -871,6 +871,18 @@ html.has-cursor [data-cursor="play"] * {
   }
 }
 
+/* Skills mosaic: chips flipping in. */
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: perspective(400px) rotateX(-80deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes grain {
   0% {
     transform: translate(0, 0);

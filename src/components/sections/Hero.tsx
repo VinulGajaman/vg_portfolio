@@ -20,7 +20,14 @@ import { Sparkle } from "@/components/ui/Sparkle";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { useMediaMap } from "@/components/providers/MediaProvider";
 import { gsap, useMotion } from "@/lib/gsap";
-import { DUR, isPlus, SCRUB, SPRING, SPRING_SAMPLES, STAGGER } from "@/lib/motion-tokens";
+import {
+  DUR,
+  isPlus,
+  SCRUB,
+  SPRING,
+  SPRING_SAMPLES,
+  STAGGER,
+} from "@/lib/motion-tokens";
 import { getUI, useIntro } from "@/lib/store";
 import { useIsDesktop, useReducedMotion } from "@/lib/hooks";
 import { hero } from "@/content/site";
@@ -31,7 +38,14 @@ import { cn } from "@/lib/cn";
 function PixelCross({ className }: { className?: string }) {
   // 24px white pixel cross: five 4.8px squares on a 5×5 grid.
   return (
-    <svg width="24" height="24" viewBox="0 0 5 5" fill="currentColor" aria-hidden className={className}>
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 5 5"
+      fill="currentColor"
+      aria-hidden
+      className={className}
+    >
       <rect x="2" y="0" width="1" height="1" />
       <rect x="2" y="1" width="1" height="1" />
       <rect x="0" y="2" width="5" height="1" />
@@ -46,14 +60,21 @@ function HeroWordmark() {
   const word = (w: string, sparkle = false) => (
     <span className="-my-[.12em] inline-block overflow-hidden py-[.12em] [perspective:1000px]">
       {Array.from(w).map((c, i) => (
-        <span key={i} data-wm-char="" className="inline-block origin-[50%_100%]">
+        <span
+          key={i}
+          data-wm-char=""
+          className="inline-block origin-[50%_100%]"
+        >
           {c}
         </span>
       ))}
       {sparkle && (
         // Lifted with relative top (no layout effect), not align-super: a raised inline box grew the
         // line box and opened a big gap between the two wordmark lines on phone.
-        <span data-wm-char="" className="relative -top-[.45em] inline-block origin-[50%_100%]">
+        <span
+          data-wm-char=""
+          className="relative -top-[.45em] inline-block origin-[50%_100%]"
+        >
           <Sparkle className="ml-[.02em] w-[.28em]" />
         </span>
       )}
@@ -122,7 +143,11 @@ function HeroCarousel() {
       tweenRef.current = null;
       return;
     }
-    const t = gsap.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: 5, ease: "none", onComplete: next });
+    const t = gsap.fromTo(
+      bar,
+      { scaleX: 0 },
+      { scaleX: 1, duration: 5, ease: "none", onComplete: next },
+    );
     tweenRef.current = t;
     return () => {
       t.kill();
@@ -159,7 +184,11 @@ function HeroCarousel() {
             transition={reduce ? { duration: 0 } : SPRING.springUI}
           >
             {hero.thumbs.map((id, i) => (
-              <div key={id} className="relative h-full w-[130px] shrink-0" aria-hidden={i !== index}>
+              <div
+                key={id}
+                className="relative h-full w-[130px] shrink-0"
+                aria-hidden={i !== index}
+              >
                 <MediaSlot id={id} fill sizes="130px" />
               </div>
             ))}
@@ -224,16 +253,20 @@ export default function Hero() {
   /* Optional cinemagraph: desktop only, never under data-saver or reduced motion. */
   const [saveData, setSaveData] = useState(true);
   useEffect(() => {
-    const c = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    const c = (navigator as Navigator & { connection?: { saveData?: boolean } })
+      .connection;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- browser-only capability read
     setSaveData(Boolean(c?.saveData));
   }, []);
-  const useLoop = Boolean(map["hero-loop"]) && isDesktop && !saveData && !reduce;
+  const useLoop =
+    Boolean(map["hero-loop"]) && isDesktop && !saveData && !reduce;
   const [loopReady, setLoopReady] = useState(false);
   useEffect(() => {
     if (!useLoop) return;
     const onCovered = (e: Event) => {
-      const v = rootRef.current?.querySelector<HTMLVideoElement>("[data-hero-loop] video");
+      const v = rootRef.current?.querySelector<HTMLVideoElement>(
+        "[data-hero-loop] video",
+      );
       if (!v) return;
       if ((e as CustomEvent<boolean>).detail) v.pause();
       else void v.play().catch(() => {});
@@ -249,34 +282,90 @@ export default function Hero() {
       if (!root) return;
       const q = gsap.utils.selector(root);
       const tl = gsap.timeline({ paused: true });
-      const add = (sel: string, from: gsap.TweenVars, to: gsap.TweenVars, at: number) => {
+      const add = (
+        sel: string,
+        from: gsap.TweenVars,
+        to: gsap.TweenVars,
+        at: number,
+      ) => {
         const els = q(sel);
         if (els.length) tl.fromTo(els, from, { ...to, force3D: true }, at);
       };
       const H = SPRING_SAMPLES.springHero.duration;
       if (rm) {
-        add("[data-intro]", { autoAlpha: 0 }, { autoAlpha: 1, duration: DUR.reduced, ease: "out" }, 0);
+        add(
+          "[data-intro]",
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: DUR.reduced, ease: "out" },
+          0,
+        );
       } else {
-        add('[data-hi="bg"]', { scale: 1.2, autoAlpha: 0.001 }, { scale: 1, autoAlpha: 1, duration: 1, ease: "portvio" }, 0);
-        add('[data-hi="wm"]', { y: 52, autoAlpha: 0.001 }, { y: 0, autoAlpha: 1, duration: H, ease: "springHero" }, 0.4);
-        add('[data-hi="tag"]', { x: -40, autoAlpha: 0.001 }, { x: 0, autoAlpha: 1, duration: H, ease: "springHero" }, 0.8);
-        add('[data-hi="para"]', { y: 40, autoAlpha: 0.001 }, { y: 0, autoAlpha: 1, duration: H, ease: "springHero" }, 0.8);
-        add('[data-hi="car"]', { x: 40, autoAlpha: 0.001 }, { x: 0, autoAlpha: 1, duration: H, ease: "springHero" }, 1.2);
+        add(
+          '[data-hi="bg"]',
+          { scale: 1.2, autoAlpha: 0.001 },
+          { scale: 1, autoAlpha: 1, duration: 1, ease: "portvio" },
+          0,
+        );
+        add(
+          '[data-hi="wm"]',
+          { y: 52, autoAlpha: 0.001 },
+          { y: 0, autoAlpha: 1, duration: H, ease: "springHero" },
+          0.4,
+        );
+        add(
+          '[data-hi="tag"]',
+          { x: -40, autoAlpha: 0.001 },
+          { x: 0, autoAlpha: 1, duration: H, ease: "springHero" },
+          0.8,
+        );
+        add(
+          '[data-hi="para"]',
+          { y: 40, autoAlpha: 0.001 },
+          { y: 0, autoAlpha: 1, duration: H, ease: "springHero" },
+          0.8,
+        );
+        add(
+          '[data-hi="car"]',
+          { x: 40, autoAlpha: 0.001 },
+          { x: 0, autoAlpha: 1, duration: H, ease: "springHero" },
+          1.2,
+        );
         add(
           '[data-hi="chips"]',
           { y: 40, autoAlpha: 0.001 },
-          { y: 0, autoAlpha: 1, duration: SPRING_SAMPLES.springLayout.duration, ease: "springLayout" },
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: SPRING_SAMPLES.springLayout.duration,
+            ease: "springLayout",
+          },
           1.2,
         );
         if (isPlus) {
-          add('[data-hi="subject"]', { scale: 1.12, yPercent: 4 }, { scale: 1, yPercent: 0, duration: 1.6, ease: "expo.out" }, 0);
+          add(
+            '[data-hi="subject"]',
+            { scale: 1.12, yPercent: 4 },
+            { scale: 1, yPercent: 0, duration: 1.6, ease: "expo.out" },
+            0,
+          );
           add(
             "[data-wm-char]",
             { yPercent: 110, rotateX: -40 },
-            { yPercent: 0, rotateX: 0, duration: 1.2, ease: "expo.out", stagger: STAGGER.charsWordmark },
+            {
+              yPercent: 0,
+              rotateX: 0,
+              duration: 1.2,
+              ease: "expo.out",
+              stagger: STAGGER.charsWordmark,
+            },
             0.4,
           );
-          add('[data-hi="tag-icon"]', { rotate: -90 }, { rotate: 0, duration: H, ease: "springHero" }, 0.8);
+          add(
+            '[data-hi="tag-icon"]',
+            { rotate: -90 },
+            { rotate: 0, duration: H, ease: "springHero" },
+            0.8,
+          );
         }
       }
       introTl.current = tl;
@@ -317,21 +406,37 @@ export default function Hero() {
       const T = () => 80 + 0.1 * cover.offsetHeight;
       const tl = gsap.timeline({
         defaults: { ease: "none" },
-        scrollTrigger: { trigger: cover, start: "top bottom", end: "bottom bottom", scrub: SCRUB, invalidateOnRefresh: true },
+        scrollTrigger: {
+          trigger: cover,
+          start: "top bottom",
+          end: "bottom bottom",
+          scrub: SCRUB,
+          invalidateOnRefresh: true,
+        },
       });
-      gsap.utils.selector(root)("[data-depth]").forEach((el) => {
-        const rate = parseFloat((el as HTMLElement).dataset.depth ?? "0") || 0;
-        tl.fromTo(el, { y: 0 }, { y: () => rate * T(), force3D: true }, 0);
-      });
+      gsap.utils
+        .selector(root)("[data-depth]")
+        .forEach((el) => {
+          const rate =
+            parseFloat((el as HTMLElement).dataset.depth ?? "0") || 0;
+          tl.fromTo(el, { y: 0 }, { y: () => rate * T(), force3D: true }, 0);
+        });
     },
     { scope: rootRef, dependencies: [layered] },
   );
 
   return (
-    <StickyHero aria-labelledby="hero-title" contentClassName="justify-between md:justify-end">
+    <StickyHero
+      aria-labelledby="hero-title"
+      contentClassName="justify-between md:justify-end"
+    >
       <div ref={rootRef} className="contents">
         {/* L0: background (single portrait, or the plate in layered mode) */}
-        <div className="absolute inset-0 z-0" data-hero-depth="0.31" data-hero-depth-scale="1.06">
+        <div
+          className="absolute inset-0 z-0"
+          data-hero-depth="0.31"
+          data-hero-depth-scale="1.06"
+        >
           <div className="absolute inset-0" data-mouse="10">
             <div className="absolute inset-0" data-hi="bg" data-intro="">
               <MediaSlot
@@ -340,25 +445,44 @@ export default function Hero() {
                 priority
                 preloadMedia
                 sizes="100vw"
-                className={cn("hidden transition-opacity duration-[400ms] md:block", layered && "md:opacity-0")}
+                className={cn(
+                  "hidden transition-opacity duration-[400ms] md:block",
+                  layered && "md:opacity-0",
+                )}
               />
               {canLayer && (
                 <MediaSlot
                   id="hero-bg-plate"
                   fill
                   sizes="100vw"
-                  className={cn("hidden opacity-0 transition-opacity duration-[400ms] md:block", layered && "opacity-100")}
+                  className={cn(
+                    "hidden opacity-0 transition-opacity duration-[400ms] md:block",
+                    layered && "opacity-100",
+                  )}
                 />
               )}
               {useLoop && (
                 <div
                   data-hero-loop=""
-                  className={cn("absolute inset-0 opacity-0 transition-opacity duration-[800ms]", loopReady && "opacity-100")}
+                  className={cn(
+                    "absolute inset-0 opacity-0 transition-opacity duration-[800ms]",
+                    loopReady && "opacity-100",
+                  )}
                 >
-                  <MediaSlot id="hero-loop" fill onReady={() => setLoopReady(true)} />
+                  <MediaSlot
+                    id="hero-loop"
+                    fill
+                    onReady={() => setLoopReady(true)}
+                  />
                 </div>
               )}
-              <MediaSlot id="hero-portrait-mobile" fill priority sizes="100vw" className="md:hidden" />
+              <MediaSlot
+                id="hero-portrait-mobile"
+                fill
+                priority
+                sizes="100vw"
+                className="md:hidden"
+              />
             </div>
           </div>
         </div>
@@ -375,7 +499,12 @@ export default function Hero() {
           >
             <div className="absolute inset-0" data-mouse="22">
               <div className="absolute inset-0" data-hi="subject">
-                <MediaSlot id="hero-subject" fill sizes="100vw" mediaClassName="object-cover" />
+                <MediaSlot
+                  id="hero-subject"
+                  fill
+                  sizes="100vw"
+                  mediaClassName="object-cover"
+                />
               </div>
             </div>
           </div>
@@ -385,64 +514,100 @@ export default function Hero() {
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 z-[3]"
-          style={{ background: "radial-gradient(60% 50% at 15% 25%, rgba(13,13,13,.45), transparent)" }}
+          style={{
+            background:
+              "radial-gradient(60% 50% at 15% 25%, rgba(13,13,13,.45), transparent)",
+          }}
         />
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 z-[3]"
-          style={{ background: "linear-gradient(0deg, rgba(13,13,13,.55) 0%, transparent 38%)" }}
+          style={{
+            background:
+              "linear-gradient(0deg, rgba(13,13,13,.55) 0%, transparent 38%)",
+          }}
         />
 
-        {/* Top group: in flow on phone, absolutely placed on tablet / desktop */}
-        <div className="relative z-[4] flex flex-col items-start gap-[30px] pb-10 pt-[100px] md:static md:p-0">
-          <div className="md:absolute md:left-[100px] md:top-[260px] md:z-[4] md:w-[280px] lg:left-[240px]">
-            <div data-mouse="4">
-              <div data-hi="tag" data-intro="" className="flex max-w-[280px] items-start gap-5">
-                <span data-hi="tag-icon" className="mt-[2px] block shrink-0 text-ink">
-                  <PixelCross />
-                </span>
-                <BlurText as="p" trigger="intro" delay={0.8} className="type-ui text-ink">
-                  {hero.tagline}
-                </BlurText>
+        {/* Content column: the backdrop stays full-bleed, but copy is capped at the site's 1400px
+            content width (portvio's 1440 container) so it does not stretch on wide screens. No
+            z-index here, so the layered depth (plate / wordmark / subject) still interleaves. */}
+        <div className="relative mx-auto flex h-full w-full max-w-[1400px] flex-col justify-end">
+          {/* Top group: in flow on phone, absolutely placed on tablet / desktop */}
+          <div className="relative z-[4] flex flex-col items-start gap-[30px] pb-10 pt-[100px] md:static md:p-0">
+            <div className="md:absolute md:left-[80px] md:top-[260px] md:z-[4] md:w-[280px] lg:left-[220px]">
+              <div data-mouse="4">
+                <div
+                  data-hi="tag"
+                  data-intro=""
+                  className="flex max-w-[280px] items-start gap-5"
+                >
+                  <span
+                    data-hi="tag-icon"
+                    className="mt-[2px] block shrink-0 text-ink"
+                  >
+                    <PixelCross />
+                  </span>
+                  <BlurText
+                    as="p"
+                    trigger="intro"
+                    delay={0.8}
+                    className="type-ui text-ink"
+                  >
+                    {hero.tagline}
+                  </BlurText>
+                </div>
+              </div>
+            </div>
+            <div className="md:absolute md:right-[80px] md:top-[260px] md:z-[4] lg:right-[220px]">
+              <div data-mouse="4">
+                <div data-hi="car" data-intro="">
+                  <HeroCarousel />
+                </div>
               </div>
             </div>
           </div>
-          <div className="md:absolute md:right-[100px] md:top-[260px] md:z-[4] lg:right-[240px]">
-            <div data-mouse="4">
-              <div data-hi="car" data-intro="">
-                <HeroCarousel />
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Bottom group: wordmark, then paragraph + chips */}
-        <div className="flex flex-col gap-[30px]">
-          <h1 id="hero-title" className={cn("relative", layered ? "z-[1]" : "z-[4]")}>
-            <span className="sr-only">{hero.srHeading}</span>
-            <span className="block" data-depth="0.17">
-              <span className="block" data-mouse="-8">
-                <span className="block" data-hi="wm" data-intro="">
-                  <HeroWordmark />
+          {/* Bottom group: wordmark, then paragraph + chips */}
+          <div className="flex flex-col gap-[30px]">
+            <h1
+              id="hero-title"
+              className={cn("relative", layered ? "z-[1]" : "z-[4]")}
+            >
+              <span className="sr-only">{hero.srHeading}</span>
+              <span className="block" data-depth="0.17">
+                <span className="block" data-mouse="-8">
+                  <span className="block" data-hi="wm" data-intro="">
+                    <HeroWordmark />
+                  </span>
                 </span>
               </span>
-            </span>
-          </h1>
-          {/* Stacked until desktop: side by side at tablet width squeezed the paragraph into a narrow column. */}
-          <div className="relative z-[4] flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
-            <div data-hi="para" data-intro="" className="max-w-[540px]">
-              <RevealText as="p" mode="lines" trigger="intro" delay={0.8} className="type-lead text-ink">
-                {hero.paragraph}
-              </RevealText>
-            </div>
-            <div data-hi="chips" data-intro="" className="w-full min-w-0 lg:max-w-[550px]">
-              <Marquee speed={40} gap={8} mask="chips" label="Core stack">
-                {hero.chips.map((c) => (
-                  <li key={c}>
-                    <Chip variant="glass">{c}</Chip>
-                  </li>
-                ))}
-              </Marquee>
+            </h1>
+            {/* Stacked until desktop: side by side at tablet width squeezed the paragraph into a narrow column. */}
+            <div className="relative z-[4] flex flex-col gap-4 md:gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
+              <div data-hi="para" data-intro="" className="max-w-[540px]">
+                <RevealText
+                  as="p"
+                  mode="lines"
+                  trigger="intro"
+                  delay={0.8}
+                  className="type-lead text-ink"
+                >
+                  {hero.paragraph}
+                </RevealText>
+              </div>
+              <div
+                data-hi="chips"
+                data-intro=""
+                className="w-full min-w-0 lg:max-w-[550px]"
+              >
+                <Marquee speed={40} gap={8} mask="chips" label="Core stack">
+                  {hero.chips.map((c) => (
+                    <li key={c}>
+                      <Chip variant="glass">{c}</Chip>
+                    </li>
+                  ))}
+                </Marquee>
+              </div>
             </div>
           </div>
         </div>

@@ -8,10 +8,8 @@ import { Marquee } from "@/components/motion/Marquee";
 import { Reveal } from "@/components/motion/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
-import { SkillsBento } from "@/components/ui/SkillsBento";
 import { SkillsCarousel } from "@/components/ui/SkillsCarousel";
-import { SkillsPhysics } from "@/components/ui/SkillsPhysics";
-import { SkillsPanels } from "@/components/ui/SkillsPanels";
+import { SkillsFlashlight } from "@/components/ui/SkillsFlashlight";
 import { stack, stackTiles, type StackTile } from "@/content/stack";
 import { stackLogos } from "@/content/stack-logos";
 import { cn } from "@/lib/cn";
@@ -51,11 +49,11 @@ function Tile({ tile }: { tile: StackTile }) {
 }
 
 /**
- * Skills section variant while Vinul compares ideas. "bento" and "carousel" are the
- * kept favourites; delete the losing variants once one is chosen.
+ * Skills section variant while Vinul compares ideas. "carousel" (the 3D ring) is Vinul's
+ * pick; the others are final-round candidates. Delete the losers once one is chosen.
  */
-const SKILLS_VARIANT: "bento" | "carousel" | "physics" | "panels" = "panels";
-const Skills = { bento: SkillsBento, carousel: SkillsCarousel, physics: SkillsPhysics, panels: SkillsPanels }[SKILLS_VARIANT];
+const SKILLS_VARIANT: "carousel" | "flashlight" = "flashlight";
+const Skills = { carousel: SkillsCarousel, flashlight: SkillsFlashlight }[SKILLS_VARIANT];
 
 export default function TechStack() {
   return (

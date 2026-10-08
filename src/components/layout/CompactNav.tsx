@@ -3,8 +3,8 @@
 /**
  * Compact nav (DESIGN.md §3.1, U16, revised per Vinul): once the hero nav has scrolled away (scrollY > 120) a bare hamburger icon
  * (no label, no pill) stays fixed top-right in a 48px hit area, with mix-blend-mode: difference so
- * it reads over any section or photo. Only the icon floats (per Vinul); the in-flow nav logo,
- * footer logo and menu Home link go back to the hero.
+ * it reads over any section or photo. A 40px "VG" logo floats top-left on the same show/hide
+ * timeline (centres aligned at 32px); clicking it glides to the top of the current page.
  * Enters with yPercent −150 → 0 (0.6s drawer) and stays put while scrolling in either direction.
  * Stays visible while the menu is open (z 42). Magnetic. Off in the `portvio` profile.
  */
@@ -13,6 +13,8 @@ import { gsap, ScrollTrigger, useMotion } from "@/lib/gsap";
 import { isPlus } from "@/lib/motion-tokens";
 import { setUI, useUI, getUI } from "@/lib/store";
 import { Magnetic } from "@/components/motion/Magnetic";
+import { LogoMark } from "@/components/brand/Logo";
+import { scrollToTarget } from "@/lib/scroll";
 import { MenuTrigger } from "./MenuTrigger";
 import { cn } from "@/lib/cn";
 
@@ -21,6 +23,7 @@ const SHOW_AFTER = 120;
 
 export function CompactNav() {
   const pillRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
   const menuOpen = useUI((s) => s.menuOpen);
   const shown = useUI((s) => s.compactNav);
   const menuRef = useRef(menuOpen);
@@ -31,8 +34,9 @@ export function CompactNav() {
   useMotion(
     ({ reduce }) => {
       const pill = pillRef.current;
-      if (!pill || !isPlus) return;
-      const els = [pill];
+      const logo = logoRef.current;
+      if (!pill || !logo || !isPlus) return;
+      const els = [pill, logo];
       gsap.set(els, { yPercent: -150, autoAlpha: 0 });
       let visible = false;
       const show = (v: boolean) => {
@@ -65,17 +69,35 @@ export function CompactNav() {
   );
 
   if (!isPlus) return null;
+  const z = menuOpen && shown ? "z-[42]" : "z-20";
   return (
-    <div
-      ref={pillRef}
-      className={cn(
-        "invisible fixed right-2 top-2 mix-blend-difference md:right-3",
-        menuOpen && shown ? "z-[42]" : "z-20",
-      )}
-    >
-      <Magnetic>
-        <MenuTrigger iconOnly className="text-white" />
-      </Magnetic>
-    </div>
+    <>
+      <div
+        ref={logoRef}
+        className={cn("invisible fixed left-5 top-3 md:left-6", z)}
+      >
+        <Magnetic>
+          <button
+            type="button"
+            aria-label="Back to top"
+            onClick={() => scrollToTarget(0)}
+            className="pressable block rounded-full"
+          >
+            <LogoMark size={40} />
+          </button>
+        </Magnetic>
+      </div>
+      <div
+        ref={pillRef}
+        className={cn(
+          "invisible fixed right-2 top-2 mix-blend-difference md:right-3",
+          z,
+        )}
+      >
+        <Magnetic>
+          <MenuTrigger iconOnly className="text-white" />
+        </Magnetic>
+      </div>
+    </>
   );
 }

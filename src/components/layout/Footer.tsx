@@ -10,7 +10,6 @@
 import { useRef, useState } from "react";
 import { gsap, useMotion } from "@/lib/gsap";
 import { isPlus } from "@/lib/motion-tokens";
-import { scrollToTarget } from "@/lib/scroll";
 import { footer, mailto, site } from "@/content/site";
 import { Logo } from "@/components/brand/Logo";
 import { LiveClock } from "@/components/ui/LiveClock";
@@ -137,9 +136,6 @@ export function Footer() {
             <div className="flex flex-col-reverse justify-between gap-10 lg:flex-row lg:items-end">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <p className="type-small text-ink">{footer.copyright}</p>
-                <button type="button" onClick={() => scrollToTarget(0)} className="type-small text-ink-soft">
-                  <RollText>{footer.backToTop}</RollText>
-                </button>
               </div>
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:w-[688px]">
                 <div className="flex flex-col">

@@ -150,7 +150,6 @@ export const footer = {
   emailLabel: "Email",
   phoneLabel: "Phone",
   copyright: "© 2026 Vinul Gajaman. Designed and built by Vinul.",
-  backToTop: "Back to top",
 } as const;
 
 export const preloader = {

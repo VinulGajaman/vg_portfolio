@@ -32,8 +32,9 @@ export function Wordmark({
       >
         <span>VINUL</span> <span>
           GAJAMAN
-          {/* Lifted with relative top so it never grows the line box (align-super opened a gap on phone). */}
-          {sparkle && <Sparkle className="relative -top-[.45em] ml-[.02em] inline-block w-[.28em]" />}
+          {/* align-top: sits at the cap line inside the line box. Lifting it above (relative top) got it
+              clipped by the reveal's line mask; align-super opened a gap between lines on phone. */}
+          {sparkle && <Sparkle className="ml-[.02em] inline-block w-[.28em] align-top" />}
         </span>
       </p>
     </div>

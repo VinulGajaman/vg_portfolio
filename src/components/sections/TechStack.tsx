@@ -11,6 +11,7 @@ import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { SkillsBento } from "@/components/ui/SkillsBento";
 import { SkillsCarousel } from "@/components/ui/SkillsCarousel";
 import { SkillsPhysics } from "@/components/ui/SkillsPhysics";
+import { SkillsPanels } from "@/components/ui/SkillsPanels";
 import { stack, stackTiles, type StackTile } from "@/content/stack";
 import { stackLogos } from "@/content/stack-logos";
 import { cn } from "@/lib/cn";
@@ -53,8 +54,8 @@ function Tile({ tile }: { tile: StackTile }) {
  * Skills section variant while Vinul compares ideas. "bento" and "carousel" are the
  * kept favourites; delete the losing variants once one is chosen.
  */
-const SKILLS_VARIANT: "bento" | "carousel" | "physics" = "physics";
-const Skills = { bento: SkillsBento, carousel: SkillsCarousel, physics: SkillsPhysics }[SKILLS_VARIANT];
+const SKILLS_VARIANT: "bento" | "carousel" | "physics" | "panels" = "panels";
+const Skills = { bento: SkillsBento, carousel: SkillsCarousel, physics: SkillsPhysics, panels: SkillsPanels }[SKILLS_VARIANT];
 
 export default function TechStack() {
   return (

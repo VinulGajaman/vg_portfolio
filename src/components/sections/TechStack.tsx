@@ -8,10 +8,10 @@ import { Marquee } from "@/components/motion/Marquee";
 import { Reveal } from "@/components/motion/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
-import { SkillsCarousel } from "@/components/ui/SkillsCarousel";
 import { SkillsFlashlight } from "@/components/ui/SkillsFlashlight";
 import { SkillsBoard } from "@/components/ui/SkillsBoard";
 import { SkillsParticles } from "@/components/ui/SkillsParticles";
+import { SkillsTunnel } from "@/components/ui/SkillsTunnel";
 import { stack, stackTiles, type StackTile } from "@/content/stack";
 import { stackLogos } from "@/content/stack-logos";
 import { cn } from "@/lib/cn";
@@ -51,11 +51,11 @@ function Tile({ tile }: { tile: StackTile }) {
 }
 
 /**
- * Skills section variant while Vinul compares ideas. "carousel" (the 3D ring) is Vinul's
- * pick; the others are final-round candidates. Delete the losers once one is chosen.
+ * Skills section variant while Vinul compares ideas. Liked so far: "board" (split-flap) and
+ * "particles" (particle morph). Delete the losers once one is chosen.
  */
-const SKILLS_VARIANT: "carousel" | "flashlight" | "board" | "particles" = "carousel";
-const Skills = { carousel: SkillsCarousel, flashlight: SkillsFlashlight, board: SkillsBoard, particles: SkillsParticles }[SKILLS_VARIANT];
+const SKILLS_VARIANT: "flashlight" | "board" | "particles" | "tunnel" = "tunnel";
+const Skills = { flashlight: SkillsFlashlight, board: SkillsBoard, particles: SkillsParticles, tunnel: SkillsTunnel }[SKILLS_VARIANT];
 
 export default function TechStack() {
   return (

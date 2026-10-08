@@ -10,6 +10,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
 import { SkillsCarousel } from "@/components/ui/SkillsCarousel";
 import { SkillsFlashlight } from "@/components/ui/SkillsFlashlight";
+import { SkillsBoard } from "@/components/ui/SkillsBoard";
 import { stack, stackTiles, type StackTile } from "@/content/stack";
 import { stackLogos } from "@/content/stack-logos";
 import { cn } from "@/lib/cn";
@@ -52,8 +53,8 @@ function Tile({ tile }: { tile: StackTile }) {
  * Skills section variant while Vinul compares ideas. "carousel" (the 3D ring) is Vinul's
  * pick; the others are final-round candidates. Delete the losers once one is chosen.
  */
-const SKILLS_VARIANT: "carousel" | "flashlight" = "flashlight";
-const Skills = { carousel: SkillsCarousel, flashlight: SkillsFlashlight }[SKILLS_VARIANT];
+const SKILLS_VARIANT: "carousel" | "flashlight" | "board" = "board";
+const Skills = { carousel: SkillsCarousel, flashlight: SkillsFlashlight, board: SkillsBoard }[SKILLS_VARIANT];
 
 export default function TechStack() {
   return (

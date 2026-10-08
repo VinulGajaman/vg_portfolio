@@ -845,6 +845,18 @@ html.has-cursor [data-cursor="play"] * {
   }
 }
 
+/* Skills departures board: one split-flap tile settling on a new character. */
+@keyframes flap {
+  from {
+    transform: rotateX(-90deg);
+    filter: brightness(0.55);
+  }
+  to {
+    transform: none;
+    filter: none;
+  }
+}
+
 @keyframes grain {
   0% {
     transform: translate(0, 0);

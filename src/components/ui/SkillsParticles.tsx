@@ -254,7 +254,17 @@ export function SkillsParticles({ className }: { className?: string }) {
             buf.height = sh;
           }
           bctx.clearRect(0, 0, buf.width, buf.height);
-          bctx.drawImage(canvas, 0, sy, canvas.width, sh, 0, 0, canvas.width, sh);
+          bctx.drawImage(
+            canvas,
+            0,
+            sy,
+            canvas.width,
+            sh,
+            0,
+            0,
+            canvas.width,
+            sh,
+          );
           ctx.save();
           ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.clearRect(0, sy, canvas.width, sh);
@@ -264,7 +274,10 @@ export function SkillsParticles({ className }: { className?: string }) {
         // noise bars
         const bars = 1 + Math.floor(Math.random() * 4);
         for (let i = 0; i < bars; i++) {
-          ctx.fillStyle = Math.random() < 0.6 ? `rgba(246,88,2,${0.5 * k})` : `rgba(255,255,255,${0.25 * k})`;
+          ctx.fillStyle =
+            Math.random() < 0.6
+              ? `rgba(246,88,2,${0.5 * k})`
+              : `rgba(255,255,255,${0.25 * k})`;
           ctx.fillRect(0, Math.random() * H, W, 1 + Math.random() * 2);
         }
       }
@@ -272,7 +285,12 @@ export function SkillsParticles({ className }: { className?: string }) {
 
     // Mouse, pen and touch all push the particles; a finger lifts / cancels → they spring back.
     const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse" && e.buttons === 0 && e.type === "pointermove") return;
+      if (
+        e.pointerType !== "mouse" &&
+        e.buttons === 0 &&
+        e.type === "pointermove"
+      )
+        return;
       const r = canvas.getBoundingClientRect();
       mouse.x = e.clientX - r.left;
       mouse.y = e.clientY - r.top;
@@ -340,16 +358,16 @@ export function SkillsParticles({ className }: { className?: string }) {
         else if (e.key === "ArrowLeft") go(-1);
       }}
       className={cn(
-        "border-overlay edge-light relative overflow-hidden rounded-2xl bg-[#0f0e0e] outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "relative rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-accent",
         className,
       )}
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-2/3"
+        className="pointer-events-none absolute inset-x-[-10%] top-[-10%] h-[85%]"
         style={{
           background:
-            "radial-gradient(50% 80% at 50% 40%, rgba(246,88,2,.10), transparent)",
+            "radial-gradient(45% 55% at 50% 50%, rgba(246,88,2,.11), transparent 75%)",
         }}
       />
       {/* Hidden probe that resolves the Clash Display font-family for the canvas */}
@@ -396,14 +414,6 @@ export function SkillsParticles({ className }: { className?: string }) {
         )}
         <h3 className="sr-only">{group.label}</h3>
 
-        {/* Hint (top-right, clear of the word) */}
-        <span className="type-small pointer-events-none absolute right-5 top-4 text-ink-faint md:right-8 md:top-6">
-          <span className="pointer-fine:hidden">Swipe or tap a side</span>
-          <span className="hidden pointer-fine:inline">
-            Click a side or drag
-          </span>
-        </span>
-
         {/* Invisible halves: only drive the custom cursor label (clicks bubble to the stage) */}
         <span
           aria-hidden
@@ -419,8 +429,8 @@ export function SkillsParticles({ className }: { className?: string }) {
         />
       </div>
 
-      <div className="relative border-t border-line px-5 py-6 md:px-10 md:py-8">
-        <div className="flex items-center gap-4 md:gap-6">
+      <div className="relative mx-auto flex max-w-[760px] flex-col items-center px-2 pb-2">
+        <div className="flex w-full max-w-[360px] items-center">
           {/* Progress segments: the active one fills as the autoplay timer; click to jump */}
           <div
             className="flex flex-1 gap-1.5"
@@ -460,7 +470,11 @@ export function SkillsParticles({ className }: { className?: string }) {
             ))}
           </div>
         </div>
-        <ul ref={chipsRef} key={active} className="mt-5 flex flex-wrap gap-2">
+        <ul
+          ref={chipsRef}
+          key={active}
+          className="mt-6 flex flex-wrap justify-center gap-2"
+        >
           {group.items.map((item, j) => (
             <li
               key={item}
@@ -470,6 +484,14 @@ export function SkillsParticles({ className }: { className?: string }) {
             </li>
           ))}
         </ul>
+        <p className="type-small mt-6 text-ink-faint">
+          <span className="pointer-fine:hidden">
+            Swipe or tap a side to explore
+          </span>
+          <span className="hidden pointer-fine:inline">
+            Click a side or drag to explore
+          </span>
+        </p>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ Image and video prompts for every media slot on the site. Generate each one, sav
 - **Attach your reference photo every time** you generate a shot that includes you. Tell the tool to keep your face and identity the same (Midjourney: `--cref <photo> --cw 100`; ChatGPT, Gemini or Flux: "use the attached photo as the person, keep their face identical").
 - **Paste the style line** at the end of every photo prompt, word for word, so every image looks like one shoot:
 
-> Cinematic editorial portrait photograph, monochrome orange-to-crimson colour grade (#F65802 fading to deep red #7A1200), subject in near-silhouette with a crisp warm rim light, shadows falling to near-black #0D0D0D, 85mm lens, shallow depth of field, subtle film grain, high contrast, minimal composition, no text, no letters, no logos, no watermark.
+> Cinematic editorial portrait photograph, monochrome orange-to-crimson colour grade (#F65802 fading to deep red #7A1200), subject partly in shadow with a crisp warm rim light, shadows falling to near-black #0D0D0D, 85mm lens, shallow depth of field, subtle film grain, high contrast, minimal composition, no text, no letters, no logos, no watermark.
 
 - **No text inside images.** Every word on the site is real HTML, so reject any image where letters or logos appear.
 - **Keep the empty space empty.** Each prompt says where text will sit on top. If the generator fills that area with detail, regenerate.
@@ -24,10 +24,10 @@ R = required for the site to look finished. O = optional upgrade.
 ## 1. Hero (top of the home page)
 
 ### `hero-portrait.webp` · R · 16:9 · 3200×1800
-> Side-profile silhouette of the person in the reference photo, facing right, positioned centre-right of the frame, head and shoulders, calm confident expression, wearing a dark minimal crew-neck. Backdrop is a smooth glowing gradient from vivid orange #F65802 to crimson. Strong warm rim light tracing their profile, jawline and hair. Keep the top-left quarter clean and dark for a headline, and the bottom 30% of the frame dark and empty for a giant wordmark. [style line]
+> Cinematic front-facing portrait of the person in the reference photo, looking straight into the camera with a calm, confident, slightly serious expression, head and shoulders, wearing a dark navy blazer over a dark shirt. Keep the face exactly identical to the reference photo: same face shape, eyes, nose, beard, moustache and hairstyle; do not alter or beautify the face. Positioned centre-right of the frame. Backdrop is a smooth glowing gradient from vivid orange #F65802 to crimson behind the head, falling off to near-black at the edges. Strong warm orange rim light on both sides of the face, jaw and hair, with the face lit softly from the front and deep shadows on the cheeks. Keep the top-left quarter clean and dark for a headline, and the bottom 30% of the frame dark and empty for a giant wordmark. [style line]
 
 ### `hero-portrait-mobile.webp` · R · 9:16 · 1080×1920
-> Same scene and lighting as the desktop hero, vertical composition: head and shoulders of the person from the reference photo in the upper-middle of the frame, three-quarter profile facing right, orange-to-crimson glowing backdrop, rim light. Bottom 40% of the frame fades to near-black and stays empty for text. [style line]
+> Same scene, lighting and outfit as the wide hero, vertical composition: front-facing head and shoulders of the person from the reference photo in the upper-middle of the frame, looking straight into the camera. Keep the face exactly identical to the reference photo: same face shape, eyes, nose, beard, moustache and hairstyle; do not alter or beautify the face. Orange-to-crimson glowing backdrop behind the head, warm rim light on both sides. Bottom 40% of the frame fades to near-black and stays empty for text. [style line]
 
 ### `hero-thumb-01.webp`, `hero-thumb-02.webp`, `hero-thumb-03.webp` · R · 6:5 · 520×440
 These are small thumbnails (130×110 on screen), so keep each one simple and bold.
@@ -53,7 +53,7 @@ First frame: `hero-portrait.webp`.
 ## 2. About section
 
 ### `about-portrait.webp` · R · 2:3 · 1200×1800
-> Futuristic tech portrait of the person from the reference photo, side profile facing left, a thin glowing orange light strip reflecting across their eyes like a visor, dark background, orange monochrome grade, dramatic contrast. Keep their head within the middle 70% of the frame vertically (the image scrolls inside a frame). [style line]
+> Moody front-facing cinematic portrait of the person from the reference photo, looking straight into the camera, chest up, dark navy blazer. Keep the face exactly identical to the reference photo: same face shape, eyes, nose, beard, moustache and hairstyle; do not alter or beautify the face. A thin horizontal band of glowing orange light falls across the eyes, the rest of the face in soft shadow, dark background with a faint orange-to-crimson glow behind the shoulders, dramatic contrast. Keep the head within the middle 70% of the frame vertically. [style line]
 
 ---
 

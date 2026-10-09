@@ -15,6 +15,7 @@ import { RevealText } from "@/components/motion/RevealText";
 import { Marquee } from "@/components/motion/Marquee";
 import { SlotSwap, SlotValue } from "@/components/motion/SlotSwap";
 import { MediaSlot } from "@/components/ui/MediaSlot";
+import { HeroMist } from "@/components/motion/HeroMist";
 import { Chip } from "@/components/ui/Chip";
 import { Sparkle } from "@/components/ui/Sparkle";
 import { ArrowIcon } from "@/components/ui/ArrowIcon";
@@ -510,6 +511,9 @@ export default function Hero() {
             </div>
           </div>
         )}
+
+        {/* Backlit stage smoke over the portrait, under the scrims and copy */}
+        <HeroMist className="z-[2] opacity-90" />
 
         {/* Legibility scrims (siblings of the copy, never children) */}
         <div

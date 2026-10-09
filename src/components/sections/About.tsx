@@ -57,8 +57,8 @@ export default function About() {
               <li key={s.label} className="flex flex-col gap-[35px]">
                 <Reveal delay={i === 0 ? 0.3 : 0.4} className="flex max-w-[390px] items-center justify-between gap-4">
                   <span className="flex items-center gap-4">
-                    <span className="type-number inline-flex min-w-[118px] justify-center rounded-lg bg-surface px-3 py-[10px] text-ink">
-                      <Counter to={s.value} suffix={s.suffix} duration={1.4} />
+                    <span className="type-number inline-flex min-w-[118px] shrink-0 justify-center rounded-lg bg-surface px-4 py-[10px] normal-case text-ink">
+                      <Counter to={s.value} from={"from" in s ? s.from : 0} suffix={s.suffix} duration={1.4} />
                     </span>
                     <span className="type-ui text-ink">{s.label}</span>
                   </span>

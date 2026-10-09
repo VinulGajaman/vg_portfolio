@@ -513,7 +513,7 @@ export default function Hero() {
         )}
 
         {/* Backlit stage smoke over the portrait, under the scrims and copy */}
-        <HeroMist className="z-[2] opacity-90" />
+        <HeroMist className="z-[2]" />
 
         {/* Legibility scrims (siblings of the copy, never children) */}
         <div

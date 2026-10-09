@@ -50,3 +50,6 @@ next-env.d.ts
 !/research/portvio/*.md
 !/research/scroll-craft/*.md
 
+
+# image masters (large originals)
+/media-src

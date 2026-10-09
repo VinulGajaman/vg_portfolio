@@ -476,8 +476,9 @@ export default function Hero() {
                   />
                 </div>
               )}
+              {/* Phone: the dedicated portrait, or the desktop portrait cropped to the face until it exists */}
               <MediaSlot
-                id="hero-portrait-mobile"
+                id={map["hero-portrait-mobile"] || !map["hero-portrait"] ? "hero-portrait-mobile" : "hero-portrait"}
                 fill
                 priority
                 sizes="100vw"

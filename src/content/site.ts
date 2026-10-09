@@ -106,8 +106,9 @@ export const about = {
   ],
   stats: [
     { value: 2, suffix: "+", label: "Years of Experience" },
-    // Counts down from the old ~2s to show the improvement (CV: ~2s → ~50–200ms, AASL platform).
-    { value: 50, from: 2000, suffix: "ms", label: "Real-Time Latency, Was ~2s" },
+    // Live systems on the CV: AASL platform, UHF scanner, construction expense platform, Jova wallet,
+    // React Native wallet, AI chatbot, Tour Management System.
+    { value: 7, suffix: "+", label: "Production Systems Shipped" },
   ],
   paragraph:
     "Experienced in NestJS, Spring Boot, React/Next.js, React Native and Kotlin/Jetpack Compose, with production work in REST APIs, microservices, Docker/Kubernetes and CI/CD.",

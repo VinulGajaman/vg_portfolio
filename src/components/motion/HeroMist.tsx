@@ -8,7 +8,8 @@
  *   - Lit warm (cream → orange) and composited with `screen`, so it only lightens the portrait.
  *   - Desktop: low and around the sides of the wordmark. Phone: left and right of the head and
  *     tagline. Always thinner over the face.
- *   - The pointer pushes nearby puffs with its velocity (they drift away and settle).
+ *   - The pointer stirs the smoke: nearby puffs swirl around it, spin, stretch slightly and thin
+ *     out where it passes, then relax back.
  *   - Rendered at ≤ 1× DPR; runs only while the hero is on screen and not covered.
  *   - Off for reduced motion.
  * Canvas 2D (no WebGL) so it renders identically on every GPU / browser.
@@ -29,8 +30,11 @@ type Puff = {
   age: number;
   life: number;
   peak: number; // max alpha
-  px: number; // push velocity from the pointer (px/s)
+  px: number; // swirl velocity from the pointer (px/s)
   py: number;
+  spin: number; // extra angular velocity from stirring (rad/s)
+  thin: number; // 0..1 how much the cursor has parted this puff
+  stretch: number; // momentary scale-up from stirring
 };
 
 /* ---------------- procedural smoke texture ---------------- */
@@ -134,15 +138,18 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         x,
         y: mob ? rand(0.12, 0.62) : rand(0.45, 1.05),
         size: (mob ? 1.7 : 1) * (near ? rand(0.3, 0.45) : rand(0.5, 0.85)),
-        vx: (near ? rand(6, 12) : rand(2.5, 7)) * (Math.random() < 0.5 ? -1 : 1),
-        vy: -(near ? rand(3, 6) : rand(1, 3.5)),
+        vx: (near ? rand(7.5, 15) : rand(3.2, 9)) * (Math.random() < 0.5 ? -1 : 1),
+        vy: -(near ? rand(3.8, 7.5) : rand(1.3, 4.4)),
         rot: rand(0, Math.PI * 2),
-        vr: rand(-0.025, 0.025),
+        vr: rand(-0.032, 0.032),
         age: initial ? rand(0, 24) : 0,
         life: rand(26, 42),
-        peak: (near ? rand(0.16, 0.26) : rand(0.22, 0.38)) * density,
+        peak: (near ? rand(0.15, 0.24) : rand(0.2, 0.35)) * density,
         px: 0,
         py: 0,
+        spin: 0,
+        thin: 0,
+        stretch: 0,
       };
     };
     const puffs: Puff[] = Array.from({ length: COUNT }, () => spawn(true));
@@ -208,33 +215,45 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         const cx = p.x * W;
         const cy = p.y * H;
         const s = p.size * W;
-        // pointer push (within the puff's radius)
+        // Stirring, not pushing: the cursor makes nearby smoke swirl around it (tangential
+        // motion), spin, stretch a little and thin out where it passes, then everything relaxes.
         const dx = cx - ptr.x;
         const dy = cy - ptr.y;
-        const near = Math.max(0, 1 - Math.hypot(dx, dy) / (s * 0.6));
-        if (near > 0) {
-          p.px += ptr.vx * near * 0.035;
-          p.py += ptr.vy * near * 0.035;
+        const dist = Math.hypot(dx, dy) || 1;
+        const near = Math.max(0, 1 - dist / (s * 0.55));
+        const speed = Math.hypot(ptr.vx, ptr.vy);
+        if (near > 0 && speed > 20) {
+          const turn = Math.sign(ptr.vx * dy - ptr.vy * dx) || 1; // swirl direction from the stroke
+          const swirl = Math.min(speed, 1600) * near * 0.012;
+          p.px += (-dy / dist) * swirl * turn + ptr.vx * near * 0.006;
+          p.py += (dx / dist) * swirl * turn + ptr.vy * near * 0.006;
+          p.spin += turn * near * Math.min(speed, 1600) * 0.00045;
+          p.thin = Math.min(0.45, p.thin + near * speed * 0.0002);
+          p.stretch = Math.min(0.18, p.stretch + near * speed * 0.00008);
         }
-        p.px *= 0.97;
-        p.py *= 0.97;
+        p.px *= 0.95;
+        p.py *= 0.95;
+        p.spin *= 0.96;
+        p.thin *= 0.975;
+        p.stretch *= 0.97;
         p.x += ((p.vx * k + p.px) * dt) / W;
         p.y += ((p.vy * k + p.py) * dt) / H;
-        p.rot += p.vr * dt;
+        p.rot += (p.vr + p.spin) * dt;
 
         // breathe in / out over its life, thinner over the face (upper middle)
         const t = p.age / p.life;
         const env = Math.sin(Math.PI * Math.min(1, t)) ** 1.2;
         const face = phone() ? { x: 0.5, y: 0.24, r: 0.3 } : { x: 0.52, y: 0.4, r: 0.35 };
         const overFace = Math.max(0, 1 - Math.hypot(p.x - face.x, (p.y - face.y) * 1.6) / face.r);
-        const a = p.peak * env * (1 - overFace * 0.65);
+        const a = p.peak * env * (1 - overFace * 0.65) * (1 - p.thin);
         if (a < 0.005) continue;
 
         ctx.save();
         ctx.globalAlpha = a;
         ctx.translate(cx, cy);
         ctx.rotate(p.rot);
-        ctx.drawImage(texes[p.tex], -s / 2, -s / 2, s, s);
+        const ss = s * (1 + p.stretch);
+        ctx.drawImage(texes[p.tex], -ss / 2, -ss / 2, ss, ss);
         ctx.restore();
       }
     };

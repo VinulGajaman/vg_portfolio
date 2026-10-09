@@ -8,8 +8,10 @@
  *   - Lit warm (cream → orange) and composited with `screen`, so it only lightens the portrait.
  *   - Desktop: low and around the sides of the wordmark. Phone: left and right of the head and
  *     tagline. Always thinner over the face.
- *   - The pointer moves the smoke with momentum: nearby puffs are dragged along its wake, then glide
- *     to a stop with air drag. No spin, no fading.
+ *   - Interaction is real fluid physics: a small stable-fluids solver (velocity grid with pressure
+ *     projection and vorticity confinement) is driven by the pointer, and the smoke image is warped
+ *     through the accumulated air displacement on the GPU, so smoke bends around the hand, is
+ *     dragged into its wake, curls into eddies and slowly settles back. Nothing fades or spins.
  *   - Rendered at ≤ 1× DPR; runs only while the hero is on screen and not covered.
  *   - Off for reduced motion.
  * Canvas 2D (no WebGL) so it renders identically on every GPU / browser.
@@ -30,9 +32,6 @@ type Puff = {
   age: number;
   life: number;
   peak: number; // max alpha
-  px: number; // swirl velocity from the pointer (px/s)
-  py: number;
-  stretch: number; // momentary scale-up from stirring
 };
 
 /* ---------------- procedural smoke texture ---------------- */
@@ -104,6 +103,29 @@ function smokeTexture(seed: number, size = 256): HTMLCanvasElement {
   return c;
 }
 
+/* ---------------- fluid warp (GPU) ---------------- */
+
+const VERT = `
+attribute vec2 a;
+varying vec2 vUv;
+void main(){ vUv = a * 0.5 + 0.5; gl_Position = vec4(a, 0.0, 1.0); }
+`;
+const FRAG = `
+precision mediump float;
+varying vec2 vUv;
+uniform sampler2D uSmoke;
+uniform sampler2D uDisp;
+uniform vec2 uRes;   // css px
+uniform float uMax;  // px encoded by a full byte swing
+void main(){
+  vec2 d = (texture2D(uDisp, vUv).rg - 0.5) * 2.0 * uMax;   // px, screen space (y down)
+  vec2 uv = vUv - vec2(d.x, -d.y) / uRes;                    // smoke at x moved to x + d
+  vec4 c = texture2D(uSmoke, uv);
+  gl_FragColor = vec4(c.rgb * c.a, c.a);
+}
+`;
+const MAX_D = 180; // px
+
 /* ---------------- component ---------------- */
 
 export function HeroMist({ className, density = 1 }: { className?: string; density?: number }) {
@@ -113,15 +135,19 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas || reduce) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
 
-    const texes = [smokeTexture(7), smokeTexture(1993), smokeTexture(424242)];
+    // Smoke is painted off-screen, then warped through the air simulation onto the visible canvas.
+    const src = document.createElement("canvas");
+    const sctx = src.getContext("2d");
+    if (!sctx) return;
+    const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false });
+
+    const texes = [smokeTexture(7, 320), smokeTexture(1993, 320), smokeTexture(424242, 320)];
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
     // Phone (portrait screens): smoke sits on the left and right of the head and tagline (upper
     // middle); desktop: low and around the sides of the wordmark.
     const phone = () => canvas.clientWidth < 700;
-    const COUNT = Math.round((phone() ? 12 : 18) * Math.min(1.5, density));
+    const COUNT = Math.round((phone() ? 10 : 14) * Math.min(1.5, density));
 
     const spawn = (initial: boolean): Puff => {
       const side = Math.random();
@@ -136,45 +162,287 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         x,
         y: mob ? rand(0.12, 0.62) : rand(0.45, 1.05),
         size: (mob ? 1.7 : 1) * (near ? rand(0.3, 0.45) : rand(0.5, 0.85)),
-        vx: (near ? rand(7.5, 15) : rand(3.2, 9)) * (Math.random() < 0.5 ? -1 : 1),
-        vy: -(near ? rand(3.8, 7.5) : rand(1.3, 4.4)),
+        vx: (near ? rand(12, 24) : rand(5, 14)) * (Math.random() < 0.5 ? -1 : 1),
+        vy: -(near ? rand(6, 12) : rand(2, 7)),
         rot: rand(0, Math.PI * 2),
-        vr: rand(-0.032, 0.032),
+        vr: rand(-0.05, 0.05),
         age: initial ? rand(0, 24) : 0,
-        life: rand(26, 42),
-        peak: (near ? rand(0.15, 0.24) : rand(0.2, 0.35)) * density,
-        px: 0,
-        py: 0,
-        stretch: 0,
+        life: rand(20, 32),
+        peak: (near ? rand(0.12, 0.19) : rand(0.16, 0.27)) * density,
       };
     };
     const puffs: Puff[] = Array.from({ length: COUNT }, () => spawn(true));
 
+    /* ----- GL setup ----- */
+    let prog: WebGLProgram | null = null;
+    let tSmoke: WebGLTexture | null = null;
+    let tDisp: WebGLTexture | null = null;
+    let uRes: WebGLUniformLocation | null = null;
+    if (gl) {
+      const sh = (type: number, code: string) => {
+        const o = gl.createShader(type)!;
+        gl.shaderSource(o, code);
+        gl.compileShader(o);
+        return o;
+      };
+      prog = gl.createProgram()!;
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) prog = null;
+    }
+    const ctx2d = !prog ? canvas.getContext("2d") : null; // fallback: plain smoke, no warp
+    if (gl && prog) {
+      gl.useProgram(prog);
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, "a");
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      const mk = (unit: number) => {
+        const t = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE0 + unit);
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        return t;
+      };
+      tSmoke = mk(0);
+      tDisp = mk(1);
+      gl.uniform1i(gl.getUniformLocation(prog, "uSmoke"), 0);
+      gl.uniform1i(gl.getUniformLocation(prog, "uDisp"), 1);
+      gl.uniform1f(gl.getUniformLocation(prog, "uMax"), MAX_D);
+      uRes = gl.getUniformLocation(prog, "uRes");
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.clearColor(0, 0, 0, 0);
+    }
+
+    /* ----- air simulation (stable fluids on a coarse grid) ----- */
     let W = 0;
     let H = 0;
+    let cell = 16;
+    let gw = 0;
+    let gh = 0;
+    let S = 0;
+    let u = new Float32Array(0);
+    let v = u;
+    let u0 = u;
+    let v0 = u;
+    let dx = u; // accumulated displacement, px
+    let dy = u;
+    let dx0 = u;
+    let dy0 = u;
+    let pr = u;
+    let dv = u;
+    let curl = u;
+    let bytes = new Uint8Array(0);
+    const IX = (i: number, j: number) => i + S * j;
+
+    const bnd = (x: Float32Array) => {
+      for (let i = 1; i <= gw; i++) {
+        x[IX(i, 0)] = x[IX(i, 1)];
+        x[IX(i, gh + 1)] = x[IX(i, gh)];
+      }
+      for (let j = 1; j <= gh; j++) {
+        x[IX(0, j)] = x[IX(1, j)];
+        x[IX(gw + 1, j)] = x[IX(gw, j)];
+      }
+    };
+    const advect = (out: Float32Array, srcF: Float32Array, U: Float32Array, V: Float32Array, dt: number) => {
+      for (let j = 1; j <= gh; j++) {
+        for (let i = 1; i <= gw; i++) {
+          const k = IX(i, j);
+          let x = i - dt * U[k];
+          let y = j - dt * V[k];
+          x = x < 0.5 ? 0.5 : x > gw + 0.5 ? gw + 0.5 : x;
+          y = y < 0.5 ? 0.5 : y > gh + 0.5 ? gh + 0.5 : y;
+          const i0 = x | 0;
+          const j0 = y | 0;
+          const s1 = x - i0;
+          const t1 = y - j0;
+          const a = IX(i0, j0);
+          out[k] =
+            (1 - s1) * ((1 - t1) * srcF[a] + t1 * srcF[a + S]) + s1 * ((1 - t1) * srcF[a + 1] + t1 * srcF[a + S + 1]);
+        }
+      }
+      bnd(out);
+    };
+    const project = () => {
+      for (let j = 1; j <= gh; j++) {
+        for (let i = 1; i <= gw; i++) {
+          const k = IX(i, j);
+          dv[k] = -0.5 * (u[k + 1] - u[k - 1] + v[k + S] - v[k - S]);
+          pr[k] = 0;
+        }
+      }
+      bnd(dv);
+      bnd(pr);
+      for (let it = 0; it < 12; it++) {
+        for (let j = 1; j <= gh; j++) {
+          for (let i = 1; i <= gw; i++) {
+            const k = IX(i, j);
+            pr[k] = (dv[k] + pr[k - 1] + pr[k + 1] + pr[k - S] + pr[k + S]) * 0.25;
+          }
+        }
+        bnd(pr);
+      }
+      for (let j = 1; j <= gh; j++) {
+        for (let i = 1; i <= gw; i++) {
+          const k = IX(i, j);
+          u[k] -= 0.5 * (pr[k + 1] - pr[k - 1]);
+          v[k] -= 0.5 * (pr[k + S] - pr[k - S]);
+        }
+      }
+      bnd(u);
+      bnd(v);
+    };
+    const vorticity = (dt: number, eps: number) => {
+      for (let j = 1; j <= gh; j++) {
+        for (let i = 1; i <= gw; i++) {
+          const k = IX(i, j);
+          curl[k] = 0.5 * (v[k + 1] - v[k - 1] - (u[k + S] - u[k - S]));
+        }
+      }
+      for (let j = 2; j < gh; j++) {
+        for (let i = 2; i < gw; i++) {
+          const k = IX(i, j);
+          const nx = 0.5 * (Math.abs(curl[k + 1]) - Math.abs(curl[k - 1]));
+          const ny = 0.5 * (Math.abs(curl[k + S]) - Math.abs(curl[k - S]));
+          const len = Math.hypot(nx, ny) + 1e-5;
+          u[k] += dt * eps * (ny / len) * curl[k];
+          v[k] -= dt * eps * (nx / len) * curl[k];
+        }
+      }
+    };
+
+    const ptr = { x: -1e4, y: -1e4, vx: 0, vy: 0, t: 0, active: 0 };
+
+    let airT = 0;
+    const simulate = (dt: number) => {
+      airT += dt;
+      // 0. ambient air: slow, large swirls that keep the smoke billowing and curling on its own
+      const A = 1.6;
+      for (let j = 1; j <= gh; j++) {
+        for (let i = 1; i <= gw; i++) {
+          const k = IX(i, j);
+          u[k] += dt * A * Math.sin(j * 0.31 + airT * 0.7) * Math.cos(i * 0.19 - airT * 0.45);
+          v[k] += dt * A * Math.cos(i * 0.27 + airT * 0.55) * Math.sin(j * 0.23 - airT * 0.38);
+        }
+      }
+      // 1. the hand moves the air (cells / s), as a soft gaussian brush
+      if (ptr.active > 0) {
+        const R = phone() ? 4.5 : 3.5;
+        const ci = ptr.x / cell + 1;
+        const cj = ptr.y / cell + 1;
+        const fu = ptr.vx / cell;
+        const fv = ptr.vy / cell;
+        for (let j = Math.max(1, Math.floor(cj - 2 * R)); j <= Math.min(gh, Math.ceil(cj + 2 * R)); j++) {
+          for (let i = Math.max(1, Math.floor(ci - 2 * R)); i <= Math.min(gw, Math.ceil(ci + 2 * R)); i++) {
+            const g = Math.exp(-((i - ci) ** 2 + (j - cj) ** 2) / (R * R)) * ptr.active;
+            const k = IX(i, j);
+            u[k] += (fu - u[k]) * g * 0.5;
+            v[k] += (fv - v[k]) * g * 0.5;
+          }
+        }
+        ptr.active = Math.max(0, ptr.active - dt * 6);
+      }
+      // 2. eddies, incompressible flow, self-advection, air drag
+      vorticity(dt, 5);
+      project();
+      u0.set(u);
+      v0.set(v);
+      advect(u, u0, u0, v0, dt);
+      advect(v, v0, u0, v0, dt);
+      const drag = Math.exp(-dt * 1.3);
+      for (let k = 0; k < u.length; k++) {
+        u[k] *= drag;
+        v[k] *= drag;
+      }
+      project();
+      // 3. the smoke's displacement follows the air, is carried by it, and relaxes back
+      for (let k = 0; k < u.length; k++) {
+        dx[k] += u[k] * cell * dt;
+        dy[k] += v[k] * cell * dt;
+      }
+      dx0.set(dx);
+      dy0.set(dy);
+      advect(dx, dx0, u, v, dt);
+      advect(dy, dy0, u, v, dt);
+      const relax = Math.exp(-dt * 0.55);
+      for (let k = 0; k < dx.length; k++) {
+        dx[k] = Math.max(-MAX_D, Math.min(MAX_D, dx[k] * relax));
+        dy[k] = Math.max(-MAX_D, Math.min(MAX_D, dy[k] * relax));
+      }
+    };
+
+    const uploadDisp = () => {
+      if (!gl || !tDisp) return;
+      for (let j = 0; j < gh; j++) {
+        for (let i = 0; i < gw; i++) {
+          const k = IX(i + 1, j + 1);
+          const o = (j * gw + i) * 4;
+          bytes[o] = 128 + Math.round((dx[k] / MAX_D) * 127);
+          bytes[o + 1] = 128 + Math.round((dy[k] / MAX_D) * 127);
+          bytes[o + 2] = 0;
+          bytes[o + 3] = 255;
+        }
+      }
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, tDisp);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gw, gh, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
+    };
+
     const resize = () => {
-      const dpr = Math.min(1, window.devicePixelRatio || 1);
       W = canvas.clientWidth;
       H = canvas.clientHeight;
-      canvas.width = Math.max(1, Math.round(W * dpr));
-      canvas.height = Math.max(1, Math.round(H * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (!W || !H) return;
+      // half-resolution smoke: it is soft, and the compositor stretches it for free
+      src.width = canvas.width = Math.max(1, Math.round(W / 2));
+      src.height = canvas.height = Math.max(1, Math.round(H / 2));
+      sctx.setTransform(0.5, 0, 0, 0.5, 0, 0);
+      ctx2d?.setTransform(1, 0, 0, 1, 0, 0);
+      cell = phone() ? 10 : 16;
+      gw = Math.max(8, Math.round(W / cell));
+      gh = Math.max(8, Math.round(H / cell));
+      S = gw + 2;
+      const n = S * (gh + 2);
+      u = new Float32Array(n);
+      v = new Float32Array(n);
+      u0 = new Float32Array(n);
+      v0 = new Float32Array(n);
+      dx = new Float32Array(n);
+      dy = new Float32Array(n);
+      dx0 = new Float32Array(n);
+      dy0 = new Float32Array(n);
+      pr = new Float32Array(n);
+      dv = new Float32Array(n);
+      curl = new Float32Array(n);
+      bytes = new Uint8Array(gw * gh * 4);
+      if (gl && prog) {
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.uniform2f(uRes, W, H);
+        uploadDisp();
+      }
     };
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
     resize();
 
-    // pointer velocity pushes nearby puffs
-    const ptr = { x: -1e4, y: -1e4, vx: 0, vy: 0, t: 0 };
     const onMove = (e: PointerEvent) => {
       const r = canvas.getBoundingClientRect();
       const x = e.clientX - r.left;
       const y = e.clientY - r.top;
       const now = performance.now();
-      const dt = Math.max(16, now - ptr.t) / 1000;
-      ptr.vx = (x - ptr.x) / dt;
-      ptr.vy = (y - ptr.y) / dt;
-      if (ptr.t === 0 || Math.abs(ptr.vx) > 5000) ptr.vx = ptr.vy = 0;
+      if (ptr.t && now - ptr.t < 100) {
+        const dtm = Math.max(8, now - ptr.t) / 1000;
+        const cap = (n: number) => Math.max(-2500, Math.min(2500, n));
+        ptr.vx = cap((x - ptr.x) / dtm);
+        ptr.vy = cap((y - ptr.y) / dtm);
+        ptr.active = 1;
+      }
       ptr.x = x;
       ptr.y = y;
       ptr.t = now;
@@ -188,19 +456,11 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
     const onCovered = (e: Event) => (covered = Boolean((e as CustomEvent<boolean>).detail));
     window.addEventListener("vg:hero-covered", onCovered);
 
-    let raf = 0;
-    let last = performance.now();
-    const frame = (now: number) => {
-      raf = requestAnimationFrame(frame);
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      if (!visible || covered || document.hidden || !W) return;
+    const paintSmoke = (dt: number) => {
       const k = W / 1440;
-      ctx.clearRect(0, 0, W, H);
-      ctx.globalCompositeOperation = "screen";
-      ptr.vx *= 0.9;
-      ptr.vy *= 0.9;
-
+      sctx.clearRect(0, 0, W, H);
+      sctx.globalCompositeOperation = "screen";
+      const face = phone() ? { x: 0.5, y: 0.24, r: 0.3 } : { x: 0.52, y: 0.4, r: 0.35 };
       for (let i = 0; i < puffs.length; i++) {
         const p = puffs[i];
         p.age += dt;
@@ -208,49 +468,44 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
           puffs[i] = spawn(false);
           continue;
         }
-        const cx = p.x * W;
-        const cy = p.y * H;
-        const s = p.size * W;
-        // Momentum, like air moving through smoke: the cursor's motion drags nearby puffs along its
-        // wake (heavier puffs move less); they glide on with inertia and slow down by air drag.
-        // No spin and no fading: the smoke only drifts with the stroke.
-        const dx = cx - ptr.x;
-        const dy = cy - ptr.y;
-        const dist = Math.hypot(dx, dy) || 1;
-        const reach = s * 0.6;
-        const near = Math.max(0, 1 - dist / reach) ** 1.5;
-        const speed = Math.hypot(ptr.vx, ptr.vy);
-        if (near > 0 && speed > 15) {
-          const v = Math.min(speed, 1800) / speed;
-          // wake: carried along with the stroke (heavier puffs = bigger, move less)
-          const mass = 0.6 + p.size;
-          p.px += (ptr.vx * v * near * 0.03) / mass;
-          p.py += (ptr.vy * v * near * 0.03) / mass;
-          p.stretch = Math.min(0.12, p.stretch + near * Math.min(speed, 1800) * 0.00004);
-        }
-        // air drag: glide, then settle back into the ambient drift
-        p.px *= 0.975;
-        p.py *= 0.975;
-        p.stretch *= 0.98;
-        p.x += ((p.vx * k + p.px) * dt) / W;
-        p.y += ((p.vy * k + p.py) * dt) / H;
+        p.x += (p.vx * k * dt) / W;
+        p.y += (p.vy * k * dt) / H;
         p.rot += p.vr * dt;
-
         // breathe in / out over its life, thinner over the face (upper middle)
         const t = p.age / p.life;
         const env = Math.sin(Math.PI * Math.min(1, t)) ** 1.2;
-        const face = phone() ? { x: 0.5, y: 0.24, r: 0.3 } : { x: 0.52, y: 0.4, r: 0.35 };
         const overFace = Math.max(0, 1 - Math.hypot(p.x - face.x, (p.y - face.y) * 1.6) / face.r);
         const a = p.peak * env * (1 - overFace * 0.65);
         if (a < 0.005) continue;
+        const s = p.size * W;
+        sctx.save();
+        sctx.globalAlpha = a;
+        sctx.translate(p.x * W, p.y * H);
+        sctx.rotate(p.rot);
+        sctx.drawImage(texes[p.tex], -s / 2, -s / 2, s, s);
+        sctx.restore();
+      }
+    };
 
-        ctx.save();
-        ctx.globalAlpha = a;
-        ctx.translate(cx, cy);
-        ctx.rotate(p.rot);
-        const ss = s * (1 + p.stretch);
-        ctx.drawImage(texes[p.tex], -ss / 2, -ss / 2, ss, ss);
-        ctx.restore();
+    let raf = 0;
+    let last = performance.now();
+    const frame = (now: number) => {
+      raf = requestAnimationFrame(frame);
+      const dt = Math.min(1 / 30, (now - last) / 1000);
+      last = now;
+      if (!visible || covered || document.hidden || !W) return;
+      paintSmoke(dt);
+      if (gl && prog) {
+        simulate(dt);
+        uploadDisp();
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, tSmoke);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      } else if (ctx2d) {
+        ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+        ctx2d.drawImage(src, 0, 0);
       }
     };
     raf = requestAnimationFrame(frame);

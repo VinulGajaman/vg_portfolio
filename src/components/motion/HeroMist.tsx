@@ -183,10 +183,10 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         x,
         y: mob ? rand(0.12, 0.62) : rand(0.45, 1.05),
         size: (mob ? 1.7 : 1) * (near ? rand(0.3, 0.45) : rand(0.5, 0.85)),
-        vx: (near ? rand(12, 24) : rand(5, 14)) * (Math.random() < 0.5 ? -1 : 1),
-        vy: -(near ? rand(6, 12) : rand(2, 7)),
+        vx: (near ? rand(13.5, 27) : rand(5.6, 15.7)) * (Math.random() < 0.5 ? -1 : 1),
+        vy: -(near ? rand(6.7, 13.4) : rand(2.2, 7.8)),
         rot: rand(0, Math.PI * 2),
-        vr: rand(-0.05, 0.05),
+        vr: rand(-0.056, 0.056),
         age: initial ? rand(0, 24) : 0,
         life: rand(20, 32),
         // phones: puffs are spread over a narrow screen, so they need a little more presence

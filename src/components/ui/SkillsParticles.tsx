@@ -18,7 +18,7 @@
  *     progress segment. Touch: a finger moving over the word pushes the particles like the mouse.
  *   - Progress: seven slim segments; the active one fills over CYCLE_MS and its animationend
  *     advances (autoplay), paused off-screen and on hover; any manual move restarts it.
- *   - Autoplay every CYCLE_MS while on screen and not hovered. Long names wrap to two lines when a
+ *   - Autoplay every CYCLE_MS while on screen (hovering does not pause it). Long names wrap to two lines when a
  *     single line would be too small. Chips rise in (y 14, stagger .04) on each change.
  *   - The loop only runs while the card is on screen; it re-samples on resize and font load.
  * Reduced motion: no canvas; the group name renders as Clash text and nothing cycles.
@@ -47,7 +47,6 @@ type P = {
 
 export function SkillsParticles({ className }: { className?: string }) {
   const [active, setActive] = useState(0);
-  const [hovered, setHovered] = useState(false);
   const [inView, setInView] = useState(false);
   const reduce = useReducedMotion();
   const boxRef = useRef<HTMLDivElement>(null);
@@ -60,7 +59,8 @@ export function SkillsParticles({ className }: { className?: string }) {
   const swipeRef = useRef<{ x: number; y: number } | null>(null);
   const n = skillGroups.length;
   const group = skillGroups[active];
-  const running = inView && !hovered && !reduce;
+  // Autoplay keeps running under the cursor (per Vinul); it only pauses off-screen.
+  const running = inView && !reduce;
 
   const go = (dir: 1 | -1) => {
     dirRef.current = dir;
@@ -349,8 +349,6 @@ export function SkillsParticles({ className }: { className?: string }) {
   return (
     <div
       ref={boxRef}
-      onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
       tabIndex={0}
       aria-label="Skills"
       onKeyDown={(e) => {

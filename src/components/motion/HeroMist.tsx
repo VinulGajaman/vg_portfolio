@@ -3,11 +3,11 @@
 /**
  * <HeroMist>: realistic drifting stage smoke for the hero, built the way film/VFX "smoke cards"
  * work: a few large, soft, procedurally generated smoke puffs (fractal-noise texture with a soft
- * radial falloff) drawn on a canvas, each slowly drifting sideways, rising, rotating and breathing
- * in and out over a 20–35s life. Overlapping puffs read as real volumetric smoke.
+ * radial falloff) drawn on a canvas in two depth layers (big slow far puffs, smaller near ones),
+ * each slowly drifting, rising, rotating and breathing in and out over a 26–42s life. Overlapping puffs read as real volumetric smoke.
  *   - Lit warm (cream → orange) and composited with `screen`, so it only lightens the portrait.
- *   - Concentrated in the lower half and around the sides of the frame (around the wordmark),
- *     thinner over the face.
+ *   - Desktop: low and around the sides of the wordmark. Phone: left and right of the head and
+ *     tagline. Always thinner over the face.
  *   - The pointer pushes nearby puffs with its velocity (they drift away and settle).
  *   - Rendered at ≤ 1× DPR; runs only while the hero is on screen and not covered.
  *   - Off for reduced motion.
@@ -116,24 +116,31 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
 
     const texes = [smokeTexture(7), smokeTexture(1993), smokeTexture(424242)];
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
-    const COUNT = Math.round((canvas.clientWidth < 700 ? 11 : 20) * Math.min(1.5, density));
+    // Phone (portrait screens): smoke sits on the left and right of the head and tagline (upper
+    // middle); desktop: low and around the sides of the wordmark.
+    const phone = () => canvas.clientWidth < 700;
+    const COUNT = Math.round((phone() ? 12 : 18) * Math.min(1.5, density));
 
     const spawn = (initial: boolean): Puff => {
       const side = Math.random();
-      // mostly lower half, biased to the sides around the wordmark
-      const x = side < 0.4 ? rand(-0.15, 0.35) : side < 0.8 ? rand(0.65, 1.15) : rand(0.25, 0.75);
+      const mob = phone();
+      const x = mob
+        ? side < 0.5 ? rand(-0.25, 0.25) : rand(0.6, 1.2)
+        : side < 0.4 ? rand(-0.15, 0.35) : side < 0.8 ? rand(0.65, 1.15) : rand(0.25, 0.75);
+      // Depth layers: big slow far puffs and a few smaller, slightly faster near ones.
+      const near = Math.random() < 0.3;
       return {
         tex: Math.floor(Math.random() * texes.length),
         x,
-        y: rand(0.45, 1.05),
-        size: rand(0.38, 0.75),
-        vx: rand(6, 22) * (Math.random() < 0.5 ? -1 : 1),
-        vy: -rand(3, 10),
+        y: mob ? rand(0.12, 0.62) : rand(0.45, 1.05),
+        size: (mob ? 1.7 : 1) * (near ? rand(0.3, 0.45) : rand(0.5, 0.85)),
+        vx: (near ? rand(6, 12) : rand(2.5, 7)) * (Math.random() < 0.5 ? -1 : 1),
+        vy: -(near ? rand(3, 6) : rand(1, 3.5)),
         rot: rand(0, Math.PI * 2),
-        vr: rand(-0.05, 0.05),
-        age: initial ? rand(0, 20) : 0,
-        life: rand(20, 35),
-        peak: rand(0.32, 0.55) * density,
+        vr: rand(-0.025, 0.025),
+        age: initial ? rand(0, 24) : 0,
+        life: rand(26, 42),
+        peak: (near ? rand(0.16, 0.26) : rand(0.22, 0.38)) * density,
         px: 0,
         py: 0,
       };
@@ -218,7 +225,8 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         // breathe in / out over its life, thinner over the face (upper middle)
         const t = p.age / p.life;
         const env = Math.sin(Math.PI * Math.min(1, t)) ** 1.2;
-        const overFace = Math.max(0, 1 - Math.hypot(p.x - 0.52, (p.y - 0.4) * 1.6) / 0.35);
+        const face = phone() ? { x: 0.5, y: 0.24, r: 0.3 } : { x: 0.52, y: 0.4, r: 0.35 };
+        const overFace = Math.max(0, 1 - Math.hypot(p.x - face.x, (p.y - face.y) * 1.6) / face.r);
         const a = p.peak * env * (1 - overFace * 0.65);
         if (a < 0.005) continue;
 

@@ -99,7 +99,7 @@ export const about = {
   statement: [
     { text: "I ARCHITECT AND DELIVER " },
     // Comma kept inside the accent span: SplitText would otherwise treat it as its own word and let it wrap alone.
-    { text: "END-TO-END CONNECTED SYSTEMS,", accent: true },
+    { text: "END-TO-END SOFTWARE AND CONNECTED SYSTEMS,", accent: true },
     {
       text: " INTEGRATING HARDWARE AND IOT DEVICES WITH SCALABLE BACKEND, WEB AND MOBILE PLATFORMS, FROM DESIGN TO DEPLOYMENT.",
     },

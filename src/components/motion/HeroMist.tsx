@@ -8,8 +8,8 @@
  *   - Lit warm (cream → orange) and composited with `screen`, so it only lightens the portrait.
  *   - Desktop: low and around the sides of the wordmark. Phone: left and right of the head and
  *     tagline. Always thinner over the face.
- *   - The pointer stirs the smoke: nearby puffs swirl around it, spin, stretch slightly and thin
- *     out where it passes, then relax back.
+ *   - The pointer moves the smoke with momentum: nearby puffs are dragged along its wake, then glide
+ *     to a stop with air drag. No spin, no fading.
  *   - Rendered at ≤ 1× DPR; runs only while the hero is on screen and not covered.
  *   - Off for reduced motion.
  * Canvas 2D (no WebGL) so it renders identically on every GPU / browser.
@@ -32,8 +32,6 @@ type Puff = {
   peak: number; // max alpha
   px: number; // swirl velocity from the pointer (px/s)
   py: number;
-  spin: number; // extra angular velocity from stirring (rad/s)
-  thin: number; // 0..1 how much the cursor has parted this puff
   stretch: number; // momentary scale-up from stirring
 };
 
@@ -147,8 +145,6 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         peak: (near ? rand(0.15, 0.24) : rand(0.2, 0.35)) * density,
         px: 0,
         py: 0,
-        spin: 0,
-        thin: 0,
         stretch: 0,
       };
     };
@@ -215,37 +211,37 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         const cx = p.x * W;
         const cy = p.y * H;
         const s = p.size * W;
-        // Stirring, not pushing: the cursor makes nearby smoke swirl around it (tangential
-        // motion), spin, stretch a little and thin out where it passes, then everything relaxes.
+        // Momentum, like air moving through smoke: the cursor's motion drags nearby puffs along its
+        // wake (heavier puffs move less); they glide on with inertia and slow down by air drag.
+        // No spin and no fading: the smoke only drifts with the stroke.
         const dx = cx - ptr.x;
         const dy = cy - ptr.y;
         const dist = Math.hypot(dx, dy) || 1;
-        const near = Math.max(0, 1 - dist / (s * 0.55));
+        const reach = s * 0.6;
+        const near = Math.max(0, 1 - dist / reach) ** 1.5;
         const speed = Math.hypot(ptr.vx, ptr.vy);
-        if (near > 0 && speed > 20) {
-          const turn = Math.sign(ptr.vx * dy - ptr.vy * dx) || 1; // swirl direction from the stroke
-          const swirl = Math.min(speed, 1600) * near * 0.012;
-          p.px += (-dy / dist) * swirl * turn + ptr.vx * near * 0.006;
-          p.py += (dx / dist) * swirl * turn + ptr.vy * near * 0.006;
-          p.spin += turn * near * Math.min(speed, 1600) * 0.00045;
-          p.thin = Math.min(0.45, p.thin + near * speed * 0.0002);
-          p.stretch = Math.min(0.18, p.stretch + near * speed * 0.00008);
+        if (near > 0 && speed > 15) {
+          const v = Math.min(speed, 1800) / speed;
+          // wake: carried along with the stroke (heavier puffs = bigger, move less)
+          const mass = 0.6 + p.size;
+          p.px += (ptr.vx * v * near * 0.03) / mass;
+          p.py += (ptr.vy * v * near * 0.03) / mass;
+          p.stretch = Math.min(0.12, p.stretch + near * Math.min(speed, 1800) * 0.00004);
         }
-        p.px *= 0.95;
-        p.py *= 0.95;
-        p.spin *= 0.96;
-        p.thin *= 0.975;
-        p.stretch *= 0.97;
+        // air drag: glide, then settle back into the ambient drift
+        p.px *= 0.975;
+        p.py *= 0.975;
+        p.stretch *= 0.98;
         p.x += ((p.vx * k + p.px) * dt) / W;
         p.y += ((p.vy * k + p.py) * dt) / H;
-        p.rot += (p.vr + p.spin) * dt;
+        p.rot += p.vr * dt;
 
         // breathe in / out over its life, thinner over the face (upper middle)
         const t = p.age / p.life;
         const env = Math.sin(Math.PI * Math.min(1, t)) ** 1.2;
         const face = phone() ? { x: 0.5, y: 0.24, r: 0.3 } : { x: 0.52, y: 0.4, r: 0.35 };
         const overFace = Math.max(0, 1 - Math.hypot(p.x - face.x, (p.y - face.y) * 1.6) / face.r);
-        const a = p.peak * env * (1 - overFace * 0.65) * (1 - p.thin);
+        const a = p.peak * env * (1 - overFace * 0.65);
         if (a < 0.005) continue;
 
         ctx.save();

@@ -97,11 +97,11 @@ export const about = {
   eyebrow: "About Me",
   /** Statement split so the accent span can be coloured (§3.3). */
   statement: [
-    { text: "FROM A BLANK WHITEBOARD TO " },
+    { text: "I DESIGN, BUILD AND DEPLOY " },
     // Comma kept inside the accent span: SplitText would otherwise treat it as its own word and let it wrap alone.
-    { text: "SOFTWARE IN PRODUCTION,", accent: true },
+    { text: "SCALABLE SOFTWARE SYSTEMS,", accent: true },
     {
-      text: " I DESIGN THE SYSTEM, BUILD EVERY LAYER AND SHIP IT TO THE PEOPLE WHO DEPEND ON IT.",
+      text: " DELIVERING RELIABLE BACKEND, WEB AND MOBILE SOLUTIONS FROM ARCHITECTURE TO PRODUCTION.",
     },
   ],
   stats: [

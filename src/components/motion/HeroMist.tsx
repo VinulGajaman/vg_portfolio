@@ -103,6 +103,25 @@ function smokeTexture(seed: number, size = 256): HTMLCanvasElement {
   return c;
 }
 
+/** Smoke textures are expensive to generate, so build them once per page, in idle time. */
+const TEX_SEEDS = [7, 1993, 424242];
+const texCache: HTMLCanvasElement[] = [];
+let texQueued = false;
+function ensureTextures() {
+  if (texQueued || typeof window === "undefined") return;
+  texQueued = true;
+  const idle: (cb: () => void) => void =
+    "requestIdleCallback" in window
+      ? (cb) => window.requestIdleCallback(cb, { timeout: 600 })
+      : (cb) => window.setTimeout(cb, 60);
+  const next = () => {
+    if (texCache.length >= TEX_SEEDS.length) return;
+    texCache.push(smokeTexture(TEX_SEEDS[texCache.length], 288));
+    idle(next);
+  };
+  idle(next);
+}
+
 /* ---------------- fluid warp (GPU) ---------------- */
 
 const VERT = `
@@ -142,11 +161,13 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
     if (!sctx) return;
     const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false });
 
-    const texes = [smokeTexture(7, 320), smokeTexture(1993, 320), smokeTexture(424242, 320)];
+    ensureTextures();
+    const texes = texCache;
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
     // Phone (portrait screens): smoke sits on the left and right of the head and tagline (upper
     // middle); desktop: low and around the sides of the wordmark.
-    const phone = () => canvas.clientWidth < 700;
+    let isPhone = canvas.clientWidth < 700;
+    const phone = () => isPhone;
     const COUNT = Math.round((phone() ? 10 : 14) * Math.min(1.5, density));
 
     const spawn = (initial: boolean): Puff => {
@@ -158,7 +179,7 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
       // Depth layers: big slow far puffs and a few smaller, slightly faster near ones.
       const near = Math.random() < 0.3;
       return {
-        tex: Math.floor(Math.random() * texes.length),
+        tex: Math.floor(Math.random() * TEX_SEEDS.length),
         x,
         y: mob ? rand(0.12, 0.62) : rand(0.45, 1.05),
         size: (mob ? 1.7 : 1) * (near ? rand(0.3, 0.45) : rand(0.5, 0.85)),
@@ -168,7 +189,8 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         vr: rand(-0.05, 0.05),
         age: initial ? rand(0, 24) : 0,
         life: rand(20, 32),
-        peak: (near ? rand(0.12, 0.19) : rand(0.16, 0.27)) * density,
+        // phones: puffs are spread over a narrow screen, so they need a little more presence
+        peak: (near ? rand(0.13, 0.2) : rand(0.17, 0.29)) * density * (mob ? 1.45 : 1),
       };
     };
     const puffs: Puff[] = Array.from({ length: COUNT }, () => spawn(true));
@@ -399,6 +421,7 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
       W = canvas.clientWidth;
       H = canvas.clientHeight;
       if (!W || !H) return;
+      isPhone = W < 700;
       // half-resolution smoke: it is soft, and the compositor stretches it for free
       src.width = canvas.width = Math.max(1, Math.round(W / 2));
       src.height = canvas.height = Math.max(1, Math.round(H / 2));
@@ -431,10 +454,10 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
     ro.observe(canvas);
     resize();
 
-    const onMove = (e: PointerEvent) => {
+    const moveTo = (clientX: number, clientY: number) => {
       const r = canvas.getBoundingClientRect();
-      const x = e.clientX - r.left;
-      const y = e.clientY - r.top;
+      const x = clientX - r.left;
+      const y = clientY - r.top;
       const now = performance.now();
       if (ptr.t && now - ptr.t < 100) {
         const dtm = Math.max(8, now - ptr.t) / 1000;
@@ -447,7 +470,24 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
       ptr.y = y;
       ptr.t = now;
     };
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") moveTo(e.clientX, e.clientY);
+    };
+    const onTouchStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      const r = canvas.getBoundingClientRect();
+      ptr.x = t.clientX - r.left; // start a new stroke without a velocity jump
+      ptr.y = t.clientY - r.top;
+      ptr.t = performance.now();
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (t) moveTo(t.clientX, t.clientY);
+    };
     window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
 
     let visible = true;
     let covered = false;
@@ -482,18 +522,32 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         sctx.globalAlpha = a;
         sctx.translate(p.x * W, p.y * H);
         sctx.rotate(p.rot);
-        sctx.drawImage(texes[p.tex], -s / 2, -s / 2, s, s);
+        const tex = texes[p.tex] ?? texes[0];
+        if (!tex) {
+          sctx.restore();
+          continue;
+        }
+        sctx.drawImage(tex, -s / 2, -s / 2, s, s);
         sctx.restore();
       }
     };
 
     let raf = 0;
     let last = performance.now();
+    let cost = 0; // EMA of the work time per update (ms)
+    let frames = 0;
+    let halfRate = isPhone;
+    let skip = false;
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      const dt = Math.min(1 / 30, (now - last) / 1000);
+      if (!visible || covered || document.hidden || !W) {
+        last = now;
+        return;
+      }
+      if (halfRate && (skip = !skip)) return; // every other frame
+      const dt = Math.min(1 / 20, (now - last) / 1000);
       last = now;
-      if (!visible || covered || document.hidden || !W) return;
+      const t0 = performance.now();
       paintSmoke(dt);
       if (gl && prog) {
         simulate(dt);
@@ -507,6 +561,8 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         ctx2d.clearRect(0, 0, canvas.width, canvas.height);
         ctx2d.drawImage(src, 0, 0);
       }
+      cost = cost * 0.9 + (performance.now() - t0) * 0.1;
+      if (++frames > 45 && !halfRate && cost > 7) halfRate = true; // slow device: drop to 30fps
     };
     raf = requestAnimationFrame(frame);
 
@@ -515,6 +571,8 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
       ro.disconnect();
       io.disconnect();
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("vg:hero-covered", onCovered);
     };
   }, [reduce, density]);

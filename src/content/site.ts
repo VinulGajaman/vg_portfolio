@@ -106,9 +106,8 @@ export const about = {
   ],
   stats: [
     { value: 2, suffix: "+", label: "Years of Experience" },
-    // Live systems on the CV: AASL platform, UHF scanner, construction expense platform, Jova wallet,
-    // React Native wallet, AI chatbot, Tour Management System.
-    { value: 7, suffix: "+", label: "Production Systems Shipped" },
+    // From the skills list (content/stack.ts): 41 technologies across 7 groups.
+    { value: 40, suffix: "+", label: "Technologies Across the Stack" },
   ],
   paragraph:
     "Experienced in NestJS, Spring Boot, React/Next.js, React Native and Kotlin/Jetpack Compose, with production work in REST APIs, microservices, Docker/Kubernetes and CI/CD.",

@@ -7,7 +7,7 @@ Image and video prompts for every media slot on the site. Generate each one, sav
 - **Attach your reference photo every time** you generate a shot that includes you. Tell the tool to keep your face and identity the same (Midjourney: `--cref <photo> --cw 100`; ChatGPT, Gemini or Flux: "use the attached photo as the person, keep their face identical").
 - **Paste the style line** at the end of every photo prompt, word for word, so every image looks like one shoot:
 
-> Cinematic editorial portrait photograph, monochrome orange-to-crimson colour grade (#F65802 fading to deep red #7A1200), subject partly in shadow with a crisp warm rim light, shadows falling to near-black #0D0D0D, 85mm lens, shallow depth of field, subtle film grain, high contrast, minimal composition, no text, no letters, no logos, no watermark.
+> Cinematic studio portrait, saturated backdrop gradient from vivid orange #F65802 to deep red #C4160A, subject in near-silhouette with cool teal-blue shadow tones on the skin (#0E3A4A to #1B6A80) and a thin warm red-orange rim light on the edges, deep blacks, teal-and-orange colour contrast, 85mm lens, shallow depth of field, subtle film grain, high contrast, minimal composition, no text, no letters, no logos, no watermark.
 
 - **No text inside images.** Every word on the site is real HTML, so reject any image where letters or logos appear.
 - **Keep the empty space empty.** Each prompt says where text will sit on top. If the generator fills that area with detail, regenerate.
@@ -24,10 +24,10 @@ R = required for the site to look finished. O = optional upgrade.
 ## 1. Hero (top of the home page)
 
 ### `hero-portrait.webp` · R · 16:9 · 3200×1800
-> Cinematic front-facing portrait of the person in the reference photo, looking straight into the camera with a calm, confident, slightly serious expression, head and shoulders, wearing a dark navy blazer over a dark shirt. Keep the face exactly identical to the reference photo: same face shape, eyes, nose, beard, moustache and hairstyle; do not alter or beautify the face. Positioned centre-right of the frame. Backdrop is a smooth glowing gradient from vivid orange #F65802 to crimson behind the head, falling off to near-black at the edges. Strong warm orange rim light on both sides of the face, jaw and hair, with the face lit softly from the front and deep shadows on the cheeks. Keep the top-left quarter clean and dark for a headline, and the bottom 30% of the frame dark and empty for a giant wordmark. [style line]
+> Edit the attached photo: keep the person exactly as they are, the same face, side profile, nose, beard, moustache, hairstyle and dark blazer, facing left. Do not change or beautify the face. Replace the background with a smooth vivid gradient from orange #F65802 on the left to deep red #C4160A on the right. Relight cinematically: the face, neck and blazer fall into deep shadow with a cool teal-blue tint on the skin, a thin warm red-orange rim light tracing the profile, nose, lips, beard, ear, jaw, neck and hair edges, the white shirt dimmed into shadow. Crop tight and large: head and shoulders filling the right half of the frame, the person looking left into the empty orange space. Keep the top-left quarter clean for a headline, and let the bottom 30% fall darker for a giant wordmark. [style line]
 
 ### `hero-portrait-mobile.webp` · R · 9:16 · 1080×1920
-> Same scene, lighting and outfit as the wide hero, vertical composition: front-facing head and shoulders of the person from the reference photo in the upper-middle of the frame, looking straight into the camera. Keep the face exactly identical to the reference photo: same face shape, eyes, nose, beard, moustache and hairstyle; do not alter or beautify the face. Orange-to-crimson glowing backdrop behind the head, warm rim light on both sides. Bottom 40% of the frame fades to near-black and stays empty for text. [style line]
+> Edit the attached photo: keep the person exactly as they are, the same face, side profile, nose, beard, moustache, hairstyle and dark blazer, facing left. Do not change or beautify the face. Vertical composition: head and shoulders in the upper-middle of the frame, large, looking left. Orange #F65802 to deep red #C4160A gradient background. Relight cinematically: the face, neck and blazer fall into deep shadow with a cool teal-blue tint on the skin, a thin warm red-orange rim light tracing the profile, nose, lips, beard, ear, jaw, neck and hair edges, the white shirt dimmed into shadow. The bottom 40% of the frame fades to near-black and stays empty for text. [style line]
 
 ### `hero-thumb-01.webp`, `hero-thumb-02.webp`, `hero-thumb-03.webp` · R · 6:5 · 520×440
 These are small thumbnails (130×110 on screen), so keep each one simple and bold.
@@ -53,7 +53,7 @@ First frame: `hero-portrait.webp`.
 ## 2. About section
 
 ### `about-portrait.webp` · R · 2:3 · 1200×1800
-> Moody front-facing cinematic portrait of the person from the reference photo, looking straight into the camera, chest up, dark navy blazer. Keep the face exactly identical to the reference photo: same face shape, eyes, nose, beard, moustache and hairstyle; do not alter or beautify the face. A thin horizontal band of glowing orange light falls across the eyes, the rest of the face in soft shadow, dark background with a faint orange-to-crimson glow behind the shoulders, dramatic contrast. Keep the head within the middle 70% of the frame vertically. [style line]
+> Edit the attached photo: keep the person exactly as they are, the same face, side profile, nose, beard, moustache, hairstyle and dark blazer, facing left. Do not change or beautify the face. Vertical 2:3 composition, chest up, the head within the middle 70% of the frame. Darker variant: mostly near-black background with a soft orange-to-red glow behind the head only. Relight cinematically: the face, neck and blazer fall into deep shadow with a cool teal-blue tint on the skin, a thin warm red-orange rim light tracing the profile, nose, lips, beard, ear, jaw, neck and hair edges, the white shirt dimmed into shadow. [style line]
 
 ---
 

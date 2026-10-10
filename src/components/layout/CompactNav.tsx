@@ -16,6 +16,7 @@ import { Magnetic } from "@/components/motion/Magnetic";
 import { LogoMark } from "@/components/brand/Logo";
 import { scrollToTarget } from "@/lib/scroll";
 import { MenuTrigger } from "./MenuTrigger";
+import { SoundToggle } from "@/components/ui/SoundToggle";
 import { cn } from "@/lib/cn";
 
 /** Just past the in-flow nav (72–90px tall), so a menu trigger is always on screen. */
@@ -90,10 +91,11 @@ export function CompactNav() {
       <div
         ref={pillRef}
         className={cn(
-          "invisible fixed right-2 top-2 mix-blend-difference md:right-3",
+          "invisible fixed right-2 top-2 flex items-center mix-blend-difference md:right-3",
           z,
         )}
       >
+        <SoundToggle className="size-12 text-white" />
         <Magnetic>
           <MenuTrigger iconOnly className="text-white" />
         </Magnetic>

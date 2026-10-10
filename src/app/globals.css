@@ -883,6 +883,16 @@ html.has-cursor [data-cursor="play"] * {
   }
 }
 
+/* Sound toggle equalizer bars */
+@keyframes eq {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
 @keyframes grain {
   0% {
     transform: translate(0, 0);

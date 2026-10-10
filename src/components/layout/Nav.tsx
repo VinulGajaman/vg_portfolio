@@ -19,6 +19,7 @@ import { LiveClock } from "@/components/ui/LiveClock";
 import { RollText } from "@/components/motion/RollText";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { MenuTrigger } from "./MenuTrigger";
+import { SoundToggle } from "@/components/ui/SoundToggle";
 import { cn } from "@/lib/cn";
 
 export function Nav() {
@@ -85,7 +86,10 @@ export function Nav() {
             <RollText>{site.email}</RollText>
           </a>
         </div>
-        <MenuTrigger />
+        <div className="flex items-center gap-2 md:gap-4">
+          <SoundToggle className="text-ink" />
+          <MenuTrigger />
+        </div>
       </div>
     </nav>
   );

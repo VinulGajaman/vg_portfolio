@@ -21,7 +21,8 @@ export const roles: Role[] = [
     company: "DMS Software Technologies (Pvt) Ltd",
     role: "Software Engineer Intern",
     roleDetail:
-      "Tour Management System (Spring Boot · React.js · Docker · MySQL, microservices)",
+    "",
+   //   "Tour Management System (Spring Boot · React.js · Docker · MySQL, microservices)",
     years: "2024 – 2025",
     dates: "06/2024 – 11/2025",
     location: "Colombo",

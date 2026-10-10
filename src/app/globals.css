@@ -893,6 +893,16 @@ html.has-cursor [data-cursor="play"] * {
   }
 }
 
+/* Splash "slide to enter" label shimmer */
+@keyframes shimmer-text {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
 @keyframes grain {
   0% {
     transform: translate(0, 0);

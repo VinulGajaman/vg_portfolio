@@ -54,7 +54,7 @@ function fadeTo(target: number, ms: number, done?: () => void) {
   const start = performance.now();
   const tick = (now: number) => {
     const t = Math.min(1, (now - start) / ms);
-    a.volume = from + (target - from) * t;
+    a.volume = Math.min(1, Math.max(0, from + (target - from) * t));
     if (t < 1) fadeRaf = requestAnimationFrame(tick);
     else done?.();
   };

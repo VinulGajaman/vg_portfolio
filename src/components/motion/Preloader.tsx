@@ -26,10 +26,11 @@ import { lockScroll, unlockScroll } from "@/lib/scroll";
 import { setUI, startIntro } from "@/lib/store";
 import { startMusic } from "@/components/ui/SoundToggle";
 import { EnterSlide } from "./EnterSlide";
+import { EnterCircle } from "./EnterCircle";
 
 /** Splash gesture while Vinul compares ideas (the gesture also unlocks the music). */
-const ENTERS = { slide: EnterSlide };
-const ENTER_VARIANT: keyof typeof ENTERS = "slide";
+const ENTERS = { slide: EnterSlide, circle: EnterCircle };
+const ENTER_VARIANT: keyof typeof ENTERS = "circle";
 const ENTER = ENTERS[ENTER_VARIANT];
 
 const RAMP_S = 1.8;

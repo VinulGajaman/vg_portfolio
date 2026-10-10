@@ -118,6 +118,12 @@ function boot() {
   });
 }
 
+/** Called from the splash "Enter" click: that click is the user gesture browsers require. */
+export function startMusic() {
+  boot();
+  if (wantOn) play(); // if the file is still loading, canplaythrough plays it (activation is sticky)
+}
+
 function toggle() {
   if (state.playing) {
     pause(true);

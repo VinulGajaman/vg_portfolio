@@ -12,6 +12,8 @@
  * power2.inOut, so the count is always visible from 000 even when everything is cached; real
  * progress (document.fonts.ready = 40%, hero media decode [data-preload-media] = 60%) can only
  * hold it back. Forced complete at MAX_MS.
+ * At 100 an "Enter" button fades in (click anywhere, Enter or Space): that gesture starts the
+ * background music (browsers only allow sound after one), then the exit runs.
  * Exit (~1.3s): the counter rises out (yPercent −110, 0.6s mask) and the hairline fades; at .3s the
  * dark panel lifts on a constant 7° slant (left edge higher, 12.28vw = 100vw × tan 7°) over 0.9s
  * expoInOut, revealing an orange layer that follows 0.12s later; at .55s the hero intro starts.
@@ -22,6 +24,7 @@ import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { isPlus } from "@/lib/motion-tokens";
 import { lockScroll, unlockScroll } from "@/lib/scroll";
 import { setUI, startIntro } from "@/lib/store";
+import { startMusic } from "@/components/ui/SoundToggle";
 
 const RAMP_S = 1.8;
 const HOLD_S = 0.25;
@@ -45,6 +48,7 @@ export function Preloader() {
   const numRef = useRef<HTMLSpanElement>(null);
   const lineRef = useRef<HTMLDivElement>(null);
   const fillRef = useRef<HTMLDivElement>(null);
+  const enterRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -90,7 +94,7 @@ export function Preloader() {
       };
       gsap
         .timeline({
-          delay: HOLD_S,
+          delay: 0.05,
           onComplete: () => {
             setUI({ preloader: false });
             unlockScroll("preloader");
@@ -101,9 +105,37 @@ export function Preloader() {
         .call(setClips, [], 0)
         .to(countRef.current, { yPercent: -110, duration: 0.6, ease: "mask" }, 0)
         .to(lineRef.current, { autoAlpha: 0, duration: 0.35, ease: "out" }, 0)
+        .to(enterRef.current, { autoAlpha: 0, scale: 0.94, duration: 0.4, ease: "out" }, 0)
         .to(lift, { dark: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClips }, 0.3)
         .to(lift, { accent: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClips }, 0.42)
         .call(startIntro, [], 0.55);
+    };
+
+    // At 100 the splash waits for "Enter": that click is the user gesture browsers need before
+    // they allow sound, so the music starts exactly as the site is revealed.
+    let armed = false;
+    const enter = () => {
+      if (!armed || exiting) return;
+      startMusic();
+      exit();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        enter();
+      }
+    };
+    const arm = () => {
+      if (armed) return;
+      armed = true;
+      const btn = enterRef.current;
+      if (btn) {
+        btn.style.pointerEvents = "auto";
+        gsap.fromTo(btn, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out", delay: HOLD_S });
+        window.setTimeout(() => btn.focus({ preventScroll: true }), HOLD_S * 1000 + 50);
+      }
+      panel.addEventListener("click", enter);
+      window.addEventListener("keydown", onKey);
     };
 
     // The shown value never runs ahead of real progress or of the timed ramp.
@@ -111,7 +143,7 @@ export function Preloader() {
       if (killed || exiting) return;
       shown = Math.min(ramp.v, real);
       render();
-      if (shown >= 100) exit();
+      if (shown >= 100) arm();
     };
     gsap.ticker.add(tick);
     const rampTween = gsap.to(ramp, { v: 100, duration: RAMP_S, ease: "power2.inOut", delay: 0.15 });
@@ -146,6 +178,8 @@ export function Preloader() {
 
     return () => {
       killed = true;
+      panel.removeEventListener("click", enter);
+      window.removeEventListener("keydown", onKey);
       gsap.ticker.remove(tick);
       rampTween.kill();
       window.clearTimeout(force);
@@ -157,7 +191,7 @@ export function Preloader() {
   if (done) return null;
 
   return (
-    <div aria-hidden className="preloader fixed inset-0 z-[80]">
+    <div className="preloader fixed inset-0 z-[80]">
       {/* Orange layer revealed under the lifting dark panel */}
       <div
         ref={accentRef}
@@ -173,7 +207,36 @@ export function Preloader() {
           className="pointer-events-none absolute inset-0 opacity-[.045] mix-blend-overlay"
           style={{ backgroundImage: "url(/textures/grain.png)", backgroundSize: "256px 256px" }}
         />
-        <div className="absolute bottom-[18px] right-[var(--gutter)] overflow-hidden lg:bottom-[24px]">
+        {/* Enter prompt (appears at 100) */}
+        <div className="absolute inset-0 grid place-items-center">
+          <button
+            ref={enterRef}
+            type="button"
+            aria-label="Enter the site"
+            className="group invisible pointer-events-none flex cursor-pointer flex-col items-center gap-5 opacity-0 outline-none"
+          >
+            <span className="relative grid size-[118px] place-items-center rounded-full border border-white/25 transition-[transform,border-color,background-color] duration-500 ease-out group-hover:scale-105 group-hover:border-accent group-hover:bg-accent group-focus-visible:border-accent md:size-[148px]">
+              <span aria-hidden className="absolute inset-0 rounded-full border border-accent/50 motion-safe:animate-ping [animation-duration:2.4s]" />
+              <span className="font-display text-[20px] font-semibold uppercase tracking-[0.06em] text-ink md:text-[24px]">
+                Enter
+              </span>
+            </span>
+            <span className="type-small flex items-center gap-2 text-ink-soft">
+              <span aria-hidden className="flex h-3 items-end gap-[2px]">
+                {[0, 1, 2, 3].map((i) => (
+                  <span
+                    key={i}
+                    className="h-3 w-[2px] origin-bottom rounded-full bg-accent motion-safe:animate-[eq_1s_ease-in-out_infinite_alternate]"
+                    style={{ animationDelay: `${[-0.2, -0.6, -0.1, -0.45][i]}s` }}
+                  />
+                ))}
+              </span>
+              Best experienced with sound
+            </span>
+          </button>
+        </div>
+
+        <div aria-hidden className="absolute bottom-[18px] right-[var(--gutter)] overflow-hidden lg:bottom-[24px]">
           <span
             ref={countRef}
             className="tabular block font-display text-[clamp(72px,16vw,200px)] font-semibold leading-[0.85] tracking-[-0.02em] text-ink"
@@ -181,7 +244,7 @@ export function Preloader() {
             <span ref={numRef}>000</span>
           </span>
         </div>
-        <div ref={lineRef} className="absolute inset-x-0 bottom-0 h-px bg-line">
+        <div ref={lineRef} aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-line">
           <div ref={fillRef} className="h-full w-full origin-left bg-accent" style={{ transform: "scaleX(0)" }} />
         </div>
       </div>

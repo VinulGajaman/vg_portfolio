@@ -969,6 +969,37 @@ html.has-cursor [data-cursor="play"] * {
   }
 }
 
+/* Splash Enter button: premium light switching on and off outside the button */
+@keyframes enter-light {
+  0%, 100% {
+    opacity: 0;
+    transform: scaleX(0.55);
+  }
+  22% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  58% {
+    opacity: 1;
+    transform: scaleX(1.04);
+  }
+  82% {
+    opacity: 0;
+    transform: scaleX(1.12);
+  }
+}
+@keyframes enter-halo {
+  0%, 100% {
+    opacity: 0;
+  }
+  25%, 55% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0;
+  }
+}
+
 @keyframes grain {
   0% {
     transform: translate(0, 0);

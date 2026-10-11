@@ -10,6 +10,8 @@
  *   A: an orange light orbits the outline + the arrow nudges forward
  *   B: ripple rings expand from the pill + a breathing orange glow behind it
  *   C: a light sweep glides across the glass + the letters lift in a soft wave
+ * Plus, always: a premium light outside the button (halo, light streak, floor reflection) that
+ * switches on and off slowly.
  * All loops pause on hover and are off for reduced motion.
  */
 import { cn } from "@/lib/cn";
@@ -24,6 +26,28 @@ export function EnterButton({ onComplete, className }: { onComplete: () => void;
   const c = LOOP === "C";
   return (
     <span className="relative inline-grid place-items-center">
+      {/* Premium light outside the button, switching on and off in a slow 3.6s cycle:
+          a soft warm halo behind it, a thin anamorphic light streak through it, and a faint
+          floor reflection below it. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[180%] w-[230%] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 motion-safe:animate-[enter-halo_3.6s_ease-in-out_infinite]"
+        style={{ background: "radial-gradient(closest-side, rgba(246,88,2,.28), rgba(246,88,2,.08) 55%, transparent)" }}
+      />
+      <span aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-px w-[420%] -translate-x-1/2 -translate-y-1/2">
+        <span
+          className="block h-full w-full opacity-0 motion-safe:animate-[enter-light_3.6s_cubic-bezier(.4,0,.2,1)_infinite]"
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(246,88,2,.15) 20%, rgba(255,210,180,.9) 50%, rgba(246,88,2,.15) 80%, transparent)",
+            boxShadow: "0 0 12px 1px rgba(246,88,2,.55)",
+          }}
+        />
+      </span>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-[calc(100%+14px)] h-6 w-[140%] -translate-x-1/2 rounded-[50%] opacity-0 blur-[10px] motion-safe:animate-[enter-halo_3.6s_ease-in-out_infinite]"
+        style={{ background: "radial-gradient(closest-side, rgba(246,88,2,.45), transparent)" }}
+      />
       {/* B: breathing glow behind + ripple rings */}
       {b && (
         <>
@@ -50,7 +74,7 @@ export function EnterButton({ onComplete, className }: { onComplete: () => void;
           onComplete();
         }}
         className={cn(
-          "group relative flex h-12 items-center gap-3 overflow-hidden rounded-full border border-white/25 pl-7 pr-5 text-ink outline-none transition-[border-color,color] duration-500 ease-out",
+          "group relative flex h-12 items-center gap-3 overflow-hidden rounded-full border border-white/25 bg-canvas-deep pl-7 pr-5 text-ink outline-none transition-[border-color,color] duration-500 ease-out",
           "hover:border-accent hover:text-accent-ink focus-visible:border-accent active:scale-[.97]",
           className,
         )}

@@ -3,7 +3,8 @@
  * Fixed full-viewport layer, pointer-events none, z 55, 256×256 tiling noise
  * (/textures/grain.png), opacity .045, mix-blend-mode overlay. Jitter: grain 0.8s steps(6),
  * translate ±3% (transform only); the layer is oversized so edges never show.
- * Static under reduced motion. Server component (pure CSS).
+ * Static under reduced motion, and static on phones / touch screens: there the jumps are large
+ * relative to the screen and read as the whole page shaking. Server component (pure CSS).
  */
 import { cn } from "@/lib/cn";
 
@@ -11,7 +12,7 @@ export function Grain({ className, opacity = 0.045 }: { className?: string; opac
   return (
     <div aria-hidden className={cn("pointer-events-none fixed inset-0 z-[55] overflow-hidden", className)}>
       <div
-        className="absolute inset-[-10%] mix-blend-overlay motion-safe:animate-grain"
+        className="absolute inset-[-10%] mix-blend-overlay md:pointer-fine:motion-safe:animate-grain"
         style={{
           opacity,
           backgroundImage: "url(/textures/grain.png)",

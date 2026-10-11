@@ -46,15 +46,40 @@ const pref = {
   },
 };
 
+// iOS Safari ignores `audio.volume`, so volume goes through a Web Audio gain node when available.
+let actx: AudioContext | null = null;
+let gain: GainNode | null = null;
+function ensureGraph() {
+  if (!audio || gain) return;
+  const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctx) return;
+  try {
+    actx = new Ctx();
+    const srcNode = actx.createMediaElementSource(audio);
+    gain = actx.createGain();
+    gain.gain.value = 0;
+    srcNode.connect(gain).connect(actx.destination);
+    audio.volume = 1;
+  } catch {
+    actx = null;
+    gain = null;
+  }
+}
+const getVol = () => (gain ? gain.gain.value : (audio?.volume ?? 0));
+const setVol = (v: number) => {
+  const x = Math.min(1, Math.max(0, v));
+  if (gain) gain.gain.value = x;
+  else if (audio) audio.volume = x;
+};
+
 function fadeTo(target: number, ms: number, done?: () => void) {
   if (!audio) return;
   cancelAnimationFrame(fadeRaf);
-  const a = audio;
-  const from = a.volume;
+  const from = getVol();
   const start = performance.now();
   const tick = (now: number) => {
     const t = Math.min(1, (now - start) / ms);
-    a.volume = Math.min(1, Math.max(0, from + (target - from) * t));
+    setVol(from + (target - from) * t);
     if (t < 1) fadeRaf = requestAnimationFrame(tick);
     else done?.();
   };
@@ -62,12 +87,16 @@ function fadeTo(target: number, ms: number, done?: () => void) {
 }
 
 function play() {
-  if (!audio || !state.ready) return;
-  audio.volume = audio.paused ? 0 : audio.volume;
+  if (!audio) return;
+  // Must run inside the user's gesture: iOS only starts audio (and the AudioContext) from one.
+  // Do not wait for "canplaythrough": iOS never preloads audio, so it would never fire.
+  ensureGraph();
+  void actx?.resume();
+  if (audio.paused) setVol(0);
   audio
     .play()
     .then(() => {
-      emit({ playing: true });
+      emit({ ready: true, playing: true });
       fadeTo(VOLUME, 1500);
     })
     .catch(() => {
@@ -90,10 +119,11 @@ function boot() {
   audio.loop = true;
   audio.preload = "auto";
   audio.volume = 0;
+  // Desktop browsers preload; once playable, show the toggle. Playback itself waits for a user
+  // gesture (browsers block audible autoplay), so the AudioContext is only created inside one.
   audio.addEventListener("canplaythrough", () => {
     if (state.ready) return;
-    emit({ ready: true });
-    if (wantOn) play();
+    emit({ ready: true }); // the first click / tap (or the splash Enter) starts it
   });
   audio.addEventListener("error", () => emit({ ready: false }));
   audio.src = SRC;
@@ -114,14 +144,17 @@ function boot() {
   document.addEventListener("visibilitychange", () => {
     if (!audio || !wantOn) return;
     if (document.hidden) audio.pause();
-    else if (state.playing) audio.play().catch(() => {});
+    else if (state.playing) {
+      void actx?.resume();
+      audio.play().catch(() => {});
+    }
   });
 }
 
 /** Called from the splash "Enter" click: that click is the user gesture browsers require. */
 export function startMusic() {
   boot();
-  if (wantOn) play(); // if the file is still loading, canplaythrough plays it (activation is sticky)
+  if (wantOn) play();
 }
 
 function toggle() {

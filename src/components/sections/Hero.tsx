@@ -537,14 +537,16 @@ export default function Hero() {
             content width (portvio's 1440 container) so it does not stretch on wide screens. No
             z-index here, so the layered depth (plate / wordmark / subject) still interleaves. */}
         <div className="relative mx-auto flex h-full w-full max-w-[1400px] flex-col justify-end">
-          {/* Top group: in flow on phone, absolutely placed on tablet / desktop */}
-          <div className="relative z-[4] flex flex-col items-start gap-[30px] pb-10 pt-[100px] md:static md:p-0">
-            <div className="md:absolute md:left-[80px] md:top-[260px] md:z-[4] md:w-[280px] lg:left-[220px]">
+          {/* Top group. Phone: one compact row (tagline + small carousel) sitting just above the
+              wordmark, so the upper part of the screen stays clear for the face. Tablet / desktop:
+              absolutely placed at the top. */}
+          <div className="relative z-[4] flex flex-row items-end justify-between gap-4 pb-6 md:static md:p-0">
+            <div className="min-w-0 flex-1 md:absolute md:left-[80px] md:top-[260px] md:z-[4] md:w-[280px] md:flex-none lg:left-[220px]">
               <div data-mouse="4">
                 <div
                   data-hi="tag"
                   data-intro=""
-                  className="flex max-w-[280px] items-start gap-5"
+                  className="flex max-w-[280px] items-start gap-3 md:gap-5"
                 >
                   <span
                     data-hi="tag-icon"
@@ -556,17 +558,20 @@ export default function Hero() {
                     as="p"
                     trigger="intro"
                     delay={0.8}
-                    className="type-ui text-ink"
+                    className="type-ui text-ink max-md:text-[15px] max-md:leading-[1.35]"
                   >
                     {hero.tagline}
                   </BlurText>
                 </div>
               </div>
             </div>
-            <div className="md:absolute md:right-[80px] md:top-[260px] md:z-[4] lg:right-[220px]">
-              <div data-mouse="4">
-                <div data-hi="car" data-intro="">
-                  <HeroCarousel />
+            {/* phone: the carousel is shown at 70% in a box sized to its scaled footprint */}
+            <div className="h-[96px] w-[118px] shrink-0 md:absolute md:right-[80px] md:top-[260px] md:z-[4] md:h-auto md:w-auto lg:right-[220px]">
+              <div className="origin-top-left scale-[.7] md:scale-100">
+                <div data-mouse="4">
+                  <div data-hi="car" data-intro="">
+                    <HeroCarousel />
+                  </div>
                 </div>
               </div>
             </div>

@@ -63,6 +63,9 @@ function makeNoise(seed: number) {
   };
 }
 
+/** Raw pixels of each generated texture, so WebGL can upload them without a GPU readback. */
+const texPixels = new WeakMap<HTMLCanvasElement, ImageData>();
+
 function smokeTexture(seed: number, size = 256): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = c.height = size;
@@ -100,6 +103,7 @@ function smokeTexture(seed: number, size = 256): HTMLCanvasElement {
     }
   }
   ctx.putImageData(img, 0, 0);
+  texPixels.set(c, img);
   return c;
 }
 
@@ -139,8 +143,33 @@ uniform float uMax;  // px encoded by a full byte swing
 void main(){
   vec2 d = (texture2D(uDisp, vUv).rg - 0.5) * 2.0 * uMax;   // px, screen space (y down)
   vec2 uv = vUv - vec2(d.x, -d.y) / uRes;                    // smoke at x moved to x + d
-  vec4 c = texture2D(uSmoke, uv);
-  gl_FragColor = vec4(c.rgb * c.a, c.a);
+  gl_FragColor = texture2D(uSmoke, uv);                      // already premultiplied
+}
+`;
+/** Puff pass: each puff is a rotated textured quad drawn into an offscreen framebuffer. */
+const PUFF_VERT = `
+attribute vec2 a;
+uniform vec2 uRes;   // css px
+uniform vec2 uC;     // centre, css px (y down)
+uniform float uS;    // size, css px
+uniform float uRot;
+varying vec2 vT;
+void main(){
+  vT = a * 0.5 + 0.5;
+  float c = cos(uRot), s = sin(uRot);
+  vec2 p = vec2(c * a.x - s * a.y, s * a.x + c * a.y) * (uS * 0.5) + uC;
+  gl_Position = vec4(p.x / uRes.x * 2.0 - 1.0, 1.0 - p.y / uRes.y * 2.0, 0.0, 1.0);
+}
+`;
+const PUFF_FRAG = `
+precision mediump float;
+varying vec2 vT;
+uniform sampler2D uTex;
+uniform float uA;
+void main(){
+  vec4 t = texture2D(uTex, vT);
+  float a = t.a * uA;
+  gl_FragColor = vec4(t.rgb * a, a);
 }
 `;
 const MAX_D = 180; // px
@@ -200,6 +229,14 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
     let tSmoke: WebGLTexture | null = null;
     let tDisp: WebGLTexture | null = null;
     let uRes: WebGLUniformLocation | null = null;
+    let puffProg: WebGLProgram | null = null;
+    let fbo: WebGLFramebuffer | null = null;
+    let triBuf: WebGLBuffer | null = null;
+    let quadBuf: WebGLBuffer | null = null;
+    let aWarp = 0;
+    let aPuff = 0;
+    const pu: Record<string, WebGLUniformLocation | null> = {};
+    const puffTex: (WebGLTexture | null)[] = [];
     if (gl) {
       const sh = (type: number, code: string) => {
         const o = gl.createShader(type)!;
@@ -207,21 +244,29 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         gl.compileShader(o);
         return o;
       };
-      prog = gl.createProgram()!;
-      gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
-      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
-      gl.linkProgram(prog);
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) prog = null;
+      const link = (v: string, f: string) => {
+        const pr0 = gl.createProgram()!;
+        gl.attachShader(pr0, sh(gl.VERTEX_SHADER, v));
+        gl.attachShader(pr0, sh(gl.FRAGMENT_SHADER, f));
+        gl.linkProgram(pr0);
+        return gl.getProgramParameter(pr0, gl.LINK_STATUS) ? pr0 : null;
+      };
+      prog = link(VERT, FRAG);
+      puffProg = link(PUFF_VERT, PUFF_FRAG);
+      if (!puffProg) prog = null; // both passes are needed for the GPU path
     }
     const ctx2d = !prog ? canvas.getContext("2d") : null; // fallback: plain smoke, no warp
-    if (gl && prog) {
+    if (gl && prog && puffProg) {
       gl.useProgram(prog);
-      const buf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      triBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, triBuf);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-      const loc = gl.getAttribLocation(prog, "a");
-      gl.enableVertexAttribArray(loc);
-      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      quadBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      aWarp = gl.getAttribLocation(prog, "a");
+      aPuff = gl.getAttribLocation(puffProg, "a");
+      for (const n of ["uRes", "uC", "uS", "uRot", "uA", "uTex"]) pu[n] = gl.getUniformLocation(puffProg, n);
       const mk = (unit: number) => {
         const t = gl.createTexture();
         gl.activeTexture(gl.TEXTURE0 + unit);
@@ -240,7 +285,24 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
       uRes = gl.getUniformLocation(prog, "uRes");
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       gl.clearColor(0, 0, 0, 0);
+      fbo = gl.createFramebuffer();
     }
+    /** Upload each smoke texture once, as soon as it has been generated (idle time). */
+    const syncPuffTextures = () => {
+      if (!gl) return;
+      while (puffTex.length < texes.length) {
+        const t = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        const src0 = texes[puffTex.length];
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texPixels.get(src0) ?? src0);
+        puffTex.push(t);
+      }
+    };
 
     /* ----- air simulation (stable fluids on a coarse grid) ----- */
     let W = 0;
@@ -444,9 +506,15 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
       dv = new Float32Array(n);
       curl = new Float32Array(n);
       bytes = new Uint8Array(gw * gh * 4);
-      if (gl && prog) {
-        gl.viewport(0, 0, canvas.width, canvas.height);
+      if (gl && prog && puffProg) {
+        gl.useProgram(prog);
         gl.uniform2f(uRes, W, H);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, tSmoke);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tSmoke, 0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         uploadDisp();
       }
     };
@@ -496,10 +564,31 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
     const onCovered = (e: Event) => (covered = Boolean((e as CustomEvent<boolean>).detail));
     window.addEventListener("vg:hero-covered", onCovered);
 
-    const paintSmoke = (dt: number) => {
+    type Draw = (p: Puff, alpha: number, size: number) => void;
+    const draw2d: Draw = (p, a, size) => {
+      const tex = texes[p.tex] ?? texes[0];
+      if (!tex) return;
+      sctx.save();
+      sctx.globalAlpha = a;
+      sctx.translate(p.x * W, p.y * H);
+      sctx.rotate(p.rot);
+      sctx.drawImage(tex, -size / 2, -size / 2, size, size);
+      sctx.restore();
+    };
+    const drawGl: Draw = (p, a, size) => {
+      if (!gl) return;
+      const tex = puffTex[p.tex] ?? puffTex[0];
+      if (!tex) return;
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.uniform2f(pu.uC, p.x * W, p.y * H);
+      gl.uniform1f(pu.uS, size);
+      gl.uniform1f(pu.uRot, p.rot);
+      gl.uniform1f(pu.uA, a);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+
+    const paintSmoke = (dt: number, drawPuff: Draw) => {
       const k = W / 1440;
-      sctx.clearRect(0, 0, W, H);
-      sctx.globalCompositeOperation = "screen";
       const face = phone() ? { x: 0.5, y: 0.24, r: 0.3 } : { x: 0.52, y: 0.4, r: 0.35 };
       for (let i = 0; i < puffs.length; i++) {
         const p = puffs[i];
@@ -517,18 +606,7 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
         const overFace = Math.max(0, 1 - Math.hypot(p.x - face.x, (p.y - face.y) * 1.6) / face.r);
         const a = p.peak * env * (1 - overFace * 0.65);
         if (a < 0.005) continue;
-        const s = p.size * W;
-        sctx.save();
-        sctx.globalAlpha = a;
-        sctx.translate(p.x * W, p.y * H);
-        sctx.rotate(p.rot);
-        const tex = texes[p.tex] ?? texes[0];
-        if (!tex) {
-          sctx.restore();
-          continue;
-        }
-        sctx.drawImage(tex, -s / 2, -s / 2, s, s);
-        sctx.restore();
+        drawPuff(p, a, p.size * W);
       }
     };
 
@@ -548,16 +626,42 @@ export function HeroMist({ className, density = 1 }: { className?: string; densi
       const dt = Math.min(1 / 20, (now - last) / 1000);
       last = now;
       const t0 = performance.now();
-      paintSmoke(dt);
-      if (gl && prog) {
+      if (gl && prog && puffProg) {
+        syncPuffTextures();
         simulate(dt);
         uploadDisp();
+        // 1. puffs -> framebuffer, blended like CSS "screen" (premultiplied)
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(puffProg);
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+        gl.enableVertexAttribArray(aPuff);
+        gl.vertexAttribPointer(aPuff, 2, gl.FLOAT, false, 0, 0);
+        gl.uniform2f(pu.uRes, W, H);
+        gl.uniform1i(pu.uTex, 2);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.enable(gl.BLEND);
+        gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_COLOR, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        paintSmoke(dt, drawGl);
+        gl.disable(gl.BLEND);
+        // 2. warp the framebuffer through the air displacement onto the canvas
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.useProgram(prog);
+        gl.bindBuffer(gl.ARRAY_BUFFER, triBuf);
+        gl.enableVertexAttribArray(aWarp);
+        gl.vertexAttribPointer(aWarp, 2, gl.FLOAT, false, 0, 0);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, tSmoke);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, tDisp);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
       } else if (ctx2d) {
+        sctx.clearRect(0, 0, W, H);
+        sctx.globalCompositeOperation = "screen";
+        paintSmoke(dt, draw2d);
         ctx2d.clearRect(0, 0, canvas.width, canvas.height);
         ctx2d.drawImage(src, 0, 0);
       }

@@ -85,7 +85,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <a
           href="#main"
-          className="type-ui fixed left-4 top-4 z-[90] -translate-y-[200%] rounded-pill bg-accent px-5 py-2 text-accent-ink focus-visible:translate-y-0"
+          className="type-ui pointer-events-none fixed left-4 top-4 z-[90] -translate-y-[200%] rounded-pill bg-accent px-5 py-2 text-accent-ink opacity-0 focus-visible:pointer-events-auto focus-visible:translate-y-0 focus-visible:opacity-100"
         >
           Skip to content
         </a>

@@ -14,7 +14,7 @@
  */
 import { cn } from "@/lib/cn";
 
-const LOOP: "A" | "B" | "C" = "B";
+const LOOP: "A" | "B" | "C" = "C";
 const LABEL = "Enter";
 const ease = "ease-[cubic-bezier(.16,1,.3,1)]";
 

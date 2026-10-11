@@ -12,8 +12,8 @@
  * power2.inOut, so the count is always visible from 000 even when everything is cached; real
  * progress (document.fonts.ready = 40%, hero media decode [data-preload-media] = 60%) can only
  * hold it back. Forced complete at MAX_MS.
- * At 100 an enter gesture fades in (see ENTER_VARIANT): completing it starts the background music
- * (browsers only allow sound after a user gesture), then the exit runs.
+ * At 100 a simple "Enter" button fades in: clicking it starts the background music (browsers only
+ * allow sound after a user gesture), then the exit runs.
  * Exit (~1.3s): the counter rises out (yPercent −110, 0.6s mask) and the hairline fades; at .3s the
  * dark panel lifts on a constant 7° slant (left edge higher, 12.28vw = 100vw × tan 7°) over 0.9s
  * expoInOut, revealing an orange layer that follows 0.12s later; at .55s the hero intro starts.
@@ -25,15 +25,7 @@ import { isPlus } from "@/lib/motion-tokens";
 import { lockScroll, unlockScroll } from "@/lib/scroll";
 import { setUI, startIntro } from "@/lib/store";
 import { startMusic } from "@/components/ui/SoundToggle";
-import { EnterSlide } from "./EnterSlide";
-import { EnterCircle } from "./EnterCircle";
-import { EnterHold } from "./EnterHold";
-import { EnterFog } from "./EnterFog";
-
-/** Splash gesture while Vinul compares ideas (the gesture also unlocks the music). */
-const ENTERS = { slide: EnterSlide, circle: EnterCircle, hold: EnterHold, fog: EnterFog };
-const ENTER_VARIANT: keyof typeof ENTERS = "fog";
-const ENTER = ENTERS[ENTER_VARIANT];
+import { EnterButton } from "./EnterButton";
 
 const RAMP_S = 1.8;
 const HOLD_S = 0.25;
@@ -210,7 +202,7 @@ export function Preloader() {
         {/* Enter gesture (appears at 100) */}
         <div className="absolute inset-0 grid place-items-center">
           <div ref={enterRef} className="invisible pointer-events-none opacity-0">
-            <ENTER onComplete={() => enterFn.current()} />
+            <EnterButton onComplete={() => enterFn.current()} />
           </div>
         </div>
 

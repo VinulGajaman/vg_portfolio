@@ -2,7 +2,7 @@
 
 I could not write `analysis.md`: the harness blocks subagents from creating report files, so the analysis is below. The verbatim copy of the repo's design file did work.
 
-**What the repo is.** scroll-craft is an agent skill (a Claude Code plugin called `nateherk-design`, v0.3.1, MIT), not a website template. It contains:
+**What the repo is.** scroll-craft is an AI coding-agent skill plugin (called `nateherk-design`, v0.3.1, MIT), not a website template. It contains:
 - a build procedure (`SKILL.md`)
 - design rules in `references/taste.md`
 - a small vanilla-JS scroll engine (`engine/scrollcraft.js` and `.css`) that reads `data-sc-*` attributes from your own HTML
@@ -11,7 +11,7 @@ I could not write `analysis.md`: the harness blocks subagents from creating repo
 
 **Stack.** It uses no GSAP, Lenis, framer-motion or three.js. It runs on native scroll events, one requestAnimationFrame loop, CSS sticky pinning and IntersectionObserver. Each section gets a scroll progress value from 0 to 1, published as the CSS variable `--sc-p`. The code is easy to port into React hooks.
 
-**There is no DESIGN.md, design.md or CLAUDE.md.** The design-system file is `references/taste.md`, copied verbatim (hash-checked) to `DESIGN.source.md`.
+**There is no DESIGN.md, design.md or agent instruction file.** The design-system file is `references/taste.md`, copied verbatim (hash-checked) to `DESIGN.source.md`.
 
 **Techniques worth reusing (exact values):**
 - **Pinned scroll progress:** `p = (y - top) / (height - vh)`. A pinned section needs at least 1.2 screens of scroll or it snaps.

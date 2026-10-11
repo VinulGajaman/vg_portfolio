@@ -205,7 +205,6 @@ export const MediaSlot = forwardRef<HTMLDivElement, MediaSlotProps>(function Med
     >
       <span className="ms-ph-ambient" aria-hidden />
       <span className="ms-ph-shimmer" aria-hidden />
-      <span className="ms-ph-grain" aria-hidden />
       {(["tl", "tr", "bl", "br"] as const).map((c) => (
         <span key={c} className="ms-ph-crop" data-c={c} aria-hidden />
       ))}

@@ -9,7 +9,6 @@ import { Providers } from "@/components/providers/Providers";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { PageTransitionProvider } from "@/components/motion/PageTransition";
 import { Cursor } from "@/components/motion/Cursor";
-import { Grain } from "@/components/motion/Grain";
 import { Preloader } from "@/components/motion/Preloader";
 import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import { Nav } from "@/components/layout/Nav";
@@ -24,6 +23,9 @@ export function generateMetadata(): Metadata {
     title: { default: site.metaTitle, template: `%s | ${site.name}` },
     description: site.summary,
     applicationName: site.name,
+    // iOS Safari otherwise rewrites numbers / dates / addresses into links before React hydrates;
+    // that mismatch makes React rebuild the page (and drop the classes on <html>).
+    formatDetection: { telephone: false, date: false, address: false, email: false, url: false },
     authors: [{ name: site.name }],
     openGraph: {
       type: "website",
@@ -46,7 +48,11 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-/** Adds html.js before first paint; skips the splash only for reduced motion or the portvio profile (§2.4). */
+/**
+ * Skips the splash only for reduced motion or the portvio profile (§2.4). `js` is also part of the
+ * React-owned className below: if React ever re-renders <html> (it clears every attribute it does
+ * not own), the splash and the intro gate must keep working. No-JS visitors get the noscript styles.
+ */
 const headScript = `(function(){var d=document.documentElement;d.classList.add('js');try{if(${
   MOTION_PROFILE === "portvio" ? "true" : "false"
 }||matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('no-preloader')}catch(e){d.classList.add('no-preloader')}})();`;
@@ -65,9 +71,12 @@ const personJsonLd = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   const media = getMediaMap();
   return (
-    <html lang="en" className={`${clash.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${clash.variable} ${inter.variable} js`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: headScript }} />
+        <noscript
+          dangerouslySetInnerHTML={{ __html: "<style>.preloader{display:none!important}[data-intro]{opacity:1!important}</style>" }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd).replace(/</g, "\\u003c") }}
@@ -93,7 +102,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </PageTransitionProvider>
           </SmoothScroll>
           <ScrollProgress />
-          <Grain />
           <Cursor />
           <Preloader />
         </Providers>

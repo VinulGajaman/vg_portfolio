@@ -93,8 +93,10 @@ export function StackCards({
         <div
           key={i}
           data-stack-item=""
-          className="relative md:motion-safe:sticky"
-          style={{ top: `calc(${top}px + ${i * step}px)` }}
+          // The offset applies only while sticky: on a plain `relative` card (phone, reduced motion)
+          // `top` would push each card down into the next one / the next section.
+          className="relative md:motion-safe:sticky md:motion-safe:top-[var(--stack-top)]"
+          style={{ ["--stack-top" as string]: `calc(${top}px + ${i * step}px)` }}
         >
           <div data-stack-scale="" className="relative origin-[50%_0]" style={{ borderRadius: radius }}>
             <Reveal variant="card" delay={0.2}>

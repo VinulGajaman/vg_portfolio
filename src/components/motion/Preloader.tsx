@@ -5,7 +5,7 @@
  * and reload). The inline head script adds html.no-preloader only for reduced motion or the
  * `portvio` profile, so the panel never flashes in those cases.
  *
- * Layout: fixed #0A0A0A panel, z 80, grain at .045. Bottom-right a large Clash counter 000 → 100
+ * Layout: fixed #0A0A0A panel, z 80. Bottom-right a large Clash counter 000 → 100
  * (tabular, masked), with a full-width 1px #3C3C3C hairline along the bottom whose orange fill
  * tracks the same value. Nothing else on screen.
  * Count: the shown value is min(real progress, timed ramp). The ramp runs 0 → 100 over RAMP_S with
@@ -44,6 +44,7 @@ function slant(p: number) {
 
 export function Preloader() {
   const [done, setDone] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const accentRef = useRef<HTMLDivElement>(null);
   const countRef = useRef<HTMLSpanElement>(null);
@@ -66,6 +67,7 @@ export function Preloader() {
       };
     }
 
+    const root = rootRef.current!;
     const panel = panelRef.current!;
     const accent = accentRef.current!;
     const num = numRef.current!;
@@ -137,9 +139,21 @@ export function Preloader() {
         .fromTo(box, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out" }, 0.55);
     };
 
+    // Safety net: if anything hides the splash (display: none), never leave the hero waiting
+    // behind it; skip straight to the site.
+    const skip = () => {
+      killed = true;
+      gsap.ticker.remove(tick);
+      setUI({ preloader: false });
+      unlockScroll("preloader");
+      startIntro();
+      setDone(true);
+    };
+
     // The shown value never runs ahead of real progress or of the timed ramp.
     const tick = () => {
       if (killed || exiting) return;
+      if (!root.getClientRects().length) return skip();
       shown = Math.min(ramp.v, real);
       render();
       if (shown >= 100) arm();
@@ -188,7 +202,7 @@ export function Preloader() {
   if (done) return null;
 
   return (
-    <div className="preloader fixed inset-0 z-[80]">
+    <div ref={rootRef} className="preloader fixed inset-0 z-[80]">
       {/* Orange layer revealed under the lifting dark panel */}
       <div
         ref={accentRef}
@@ -200,10 +214,6 @@ export function Preloader() {
         className="absolute inset-0 overflow-hidden bg-canvas-deep"
         style={{ clipPath: "polygon(0px 0px, 100% 0px, 100% 100%, 0px 100%)" }}
       >
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[.045] mix-blend-overlay"
-          style={{ backgroundImage: "url(/textures/grain.png)", backgroundSize: "256px 256px" }}
-        />
         {/* Enter gesture (appears at 100) */}
         <div className="absolute inset-0 grid place-items-center">
           <div ref={enterRef} className="invisible pointer-events-none opacity-0">

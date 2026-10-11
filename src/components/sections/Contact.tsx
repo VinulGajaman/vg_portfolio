@@ -13,6 +13,7 @@ import { RollText } from "@/components/motion/RollText";
 import { SlotSwap } from "@/components/motion/SlotSwap";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { MediaSlot } from "@/components/ui/MediaSlot";
+import { useMediaMap } from "@/components/providers/MediaProvider";
 import { SubmitButton, type SubmitState } from "@/components/ui/SubmitButton";
 import { gsap, onceInView, useMotion } from "@/lib/gsap";
 import { isPlus, SCRUB, SPRING_SAMPLES } from "@/lib/motion-tokens";
@@ -94,6 +95,12 @@ function CopyEmail() {
 
 export default function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
+  // The photo background (and its slanted entry) only while the photo exists; until then the
+  // section sits on the same plain canvas as every other section, with the card centred.
+  const media = useMediaMap();
+  const hasBg = Boolean(media["contact-bg"]);
+  const hasBgMobile = Boolean(media["contact-bg-mobile"]);
+  const photo = hasBg || hasBgMobile;
   const clipRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<SubmitState>("idle");
@@ -107,7 +114,7 @@ export default function Contact() {
       const card = cardRef.current;
       if (!section || !clip || !card || reduce) return;
       // U12: slanted entry (left high, right low) that straightens.
-      if (isPlus) {
+      if (isPlus && photo) {
         gsap.fromTo(
           clip,
           { clipPath: "polygon(0% 0%, 100% 12.28vw, 100% 100%, 0% 100%)" },
@@ -136,7 +143,7 @@ export default function Contact() {
       );
       onceInView(card, () => t.play(), { settle: () => t.progress(1) });
     },
-    { scope: sectionRef },
+    { scope: sectionRef, dependencies: [photo] },
   );
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -199,17 +206,28 @@ export default function Contact() {
     >
       <div
         ref={clipRef}
-        className="relative mx-auto max-w-[1440px] overflow-hidden px-[var(--gutter)] pb-[50px] pt-[300px] lg:min-h-[100svh] lg:pt-[380px]"
+        className={cn(
+          "relative mx-auto max-w-[1440px] overflow-hidden px-[var(--gutter)] pb-[50px]",
+          photo ? "pt-[300px] lg:min-h-[100svh] lg:pt-[380px]" : "pt-[60px] md:pt-[100px]",
+        )}
       >
         {/* Background: full-bleed on tablet / desktop; 4:5 on top on phone */}
-        <ScrollZoom from={1.18} parallax className="absolute inset-0 hidden md:block">
-          <MediaSlot id="contact-bg" fill sizes="100vw" />
-        </ScrollZoom>
-        <ScrollZoom from={1.18} parallax className="absolute inset-x-0 top-0 aspect-[4/5] md:hidden">
-          <MediaSlot id="contact-bg-mobile" fill sizes="100vw" />
-        </ScrollZoom>
+        {hasBg && (
+          <ScrollZoom from={1.18} parallax className="absolute inset-0 hidden md:block">
+            <MediaSlot id="contact-bg" fill sizes="100vw" />
+          </ScrollZoom>
+        )}
+        {hasBgMobile && (
+          <ScrollZoom from={1.18} parallax className="absolute inset-x-0 top-0 aspect-[4/5] md:hidden">
+            <MediaSlot id="contact-bg-mobile" fill sizes="100vw" />
+          </ScrollZoom>
+        )}
 
-        <Reveal variant="card" delay={0.2} className="relative ml-auto w-full md:w-[70%] lg:w-[600px]">
+        <Reveal
+          variant="card"
+          delay={0.2}
+          className={cn("relative w-full md:w-[70%] lg:w-[600px]", photo ? "ml-auto" : "mx-auto")}
+        >
           <div
             ref={cardRef}
             className="border-overlay-glass edge-light flex flex-col gap-[30px] rounded-[20px] p-6 md:p-10"

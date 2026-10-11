@@ -81,14 +81,14 @@ export function Footer() {
                 </TransitionLink>
                 <p className="type-body text-ink-soft">{footer.label}</p>
                 <p className="type-lead mb-6 mt-2 text-ink">{footer.line}</p>
-                <div className="border-overlay-glass flex h-[60px] w-full max-w-[400px] items-center justify-between rounded-md bg-tag py-[6px] pl-5 pr-[6px]">
-                  <span className="type-body truncate text-ink">{site.email}</span>
+                <div className="border-overlay-glass flex h-[60px] w-full max-w-[400px] items-center justify-between gap-2 rounded-md bg-tag py-[6px] pl-5 pr-[6px]">
+                  <span className="type-body min-w-0 truncate text-ink max-[400px]:text-[13px]">{site.email}</span>
                   <Magnetic>
                     <button
                       type="button"
                       onClick={copy}
                       data-cursor="copy"
-                      className="pressable type-ui flex h-[48px] w-[150px] items-center justify-center rounded-sm bg-accent text-accent-ink"
+                      className="pressable type-ui flex h-[48px] w-[150px] shrink-0 items-center justify-center rounded-sm bg-accent text-accent-ink max-[400px]:w-[104px]"
                       aria-label={copied ? "Email copied" : "Copy email address"}
                     >
                       <SlotSwap a={footer.copy} b={footer.copied} active={copied} />

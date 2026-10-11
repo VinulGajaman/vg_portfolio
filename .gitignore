@@ -54,3 +54,8 @@ next-env.d.ts
 # image masters (large originals)
 /media-src
 
+
+# stray screenshots in the project root (site images live in public/)
+/*.jpg
+/*.jpeg
+/*.png

@@ -12,8 +12,9 @@
  * power2.inOut, so the count is always visible from 000 even when everything is cached; real
  * progress (document.fonts.ready = 40%, hero media decode [data-preload-media] = 60%) can only
  * hold it back. Forced complete at MAX_MS.
- * At 100 a simple "Enter" button fades in: clicking it starts the background music (browsers only
- * allow sound after a user gesture), then the exit runs.
+ * At 100 the counter plays its outro (rises out of its mask, the line fades), then a simple "Enter"
+ * button appears on its own: clicking it starts the background music (browsers only allow sound
+ * after a user gesture), then the panels lift.
  * Exit (~1.3s): the counter rises out (yPercent −110, 0.6s mask) and the hairline fades; at .3s the
  * dark panel lifts on a constant 7° slant (left edge higher, 12.28vw = 100vw × tan 7°) over 0.9s
  * expoInOut, revealing an orange layer that follows 0.12s later; at .55s the hero intro starts.
@@ -105,12 +106,10 @@ export function Preloader() {
           },
         })
         .call(setClips, [], 0)
-        .to(countRef.current, { yPercent: -110, duration: 0.6, ease: "mask" }, 0)
-        .to(lineRef.current, { autoAlpha: 0, duration: 0.35, ease: "out" }, 0)
         .to(enterRef.current, { autoAlpha: 0, scale: 0.94, duration: 0.4, ease: "out" }, 0)
-        .to(lift, { dark: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClips }, 0.3)
-        .to(lift, { accent: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClips }, 0.42)
-        .call(startIntro, [], 0.55);
+        .to(lift, { dark: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClips }, 0.2)
+        .to(lift, { accent: 1, duration: 0.9, ease: "expoInOut", onUpdate: setClips }, 0.32)
+        .call(startIntro, [], 0.45);
     };
 
     // At 100 the splash waits for "Enter": that click is the user gesture browsers need before
@@ -126,10 +125,16 @@ export function Preloader() {
       if (armed) return;
       armed = true;
       const box = enterRef.current;
-      if (box) {
-        box.style.pointerEvents = "auto";
-        gsap.fromTo(box, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out", delay: HOLD_S });
-      }
+      // 1. counter outro: the number rises out of its mask and the progress line fades
+      // 2. then the Enter button appears on its own
+      gsap
+        .timeline({ delay: HOLD_S })
+        .to(countRef.current, { yPercent: -110, duration: 0.6, ease: "mask" }, 0)
+        .to(lineRef.current, { autoAlpha: 0, duration: 0.35, ease: "out" }, 0)
+        .call(() => {
+          if (box) box.style.pointerEvents = "auto";
+        })
+        .fromTo(box, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: "expo.out" }, 0.55);
     };
 
     // The shown value never runs ahead of real progress or of the timed ramp.

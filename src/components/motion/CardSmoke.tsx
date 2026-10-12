@@ -6,7 +6,8 @@
  * slow curling current, turn, swell and fade over an 8–14s life, so the smoke keeps moving without
  * any pointer interaction. One shared animation loop draws every card that is on screen (30fps on
  * phones), at 0.6× CSS resolution (the smoke is soft, so the difference cannot be seen), into a
- * canvas composited with `screen`. Off for reduced motion.
+ * canvas composited with `screen`. The puffs are tinted in the site colours (amber core → orange →
+ * deep red edges) instead of the hero's cream. Off for reduced motion.
  */
 import { useEffect, useRef } from "react";
 import { useReducedMotion } from "@/lib/hooks";
@@ -44,6 +45,30 @@ let raf = 0;
 let last = 0;
 let skip = false;
 
+/** Orange copies of the shared smoke textures (made once each): the colour is painted over the
+ *  smoke with `source-atop`, so the smoke keeps its shape and transparency. */
+const tinted = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+function tint(src: HTMLCanvasElement) {
+  let t = tinted.get(src);
+  if (t) return t;
+  t = document.createElement("canvas");
+  t.width = src.width;
+  t.height = src.height;
+  const x = t.getContext("2d")!;
+  const r = src.width / 2;
+  x.drawImage(src, 0, 0);
+  x.globalCompositeOperation = "source-atop";
+  x.globalAlpha = 0.85;
+  const g = x.createRadialGradient(r, r, 0, r, r, r);
+  g.addColorStop(0, "rgb(255 150 70)");
+  g.addColorStop(0.55, "rgb(246 88 2)");
+  g.addColorStop(1, "rgb(160 30 8)");
+  x.fillStyle = g;
+  x.fillRect(0, 0, src.width, src.height);
+  tinted.set(src, t);
+  return t;
+}
+
 /** Puff size scales with the card's short side, so a wide desktop row and a phone card match. */
 const base = (c: Card) => Math.min(c.W, c.H * 1.6);
 
@@ -59,7 +84,7 @@ function spawn(c: Card, initial: boolean): Puff {
     vr: rand(-0.22, 0.22),
     age: initial ? rand(0, 9) : 0,
     life: rand(8, 14),
-    peak: rand(0.12, 0.23) * c.density,
+    peak: rand(0.12, 0.23) * c.density * (c.W < 600 ? 1.6 : 1), // phone cards sit on a lighter surface
     ph: rand(0, Math.PI * 2),
   };
 }
@@ -82,8 +107,9 @@ function paint(c: Card, dt: number, t: number, tex: HTMLCanvasElement[]) {
     p.rot += p.vr * dt;
     p.size *= 1 + 0.035 * dt; // smoke spreads as it rises
     const a = p.peak * Math.sin(Math.PI * (p.age / p.life)) ** 1.2;
-    const img = tex[p.tex] ?? tex[0];
-    if (a < 0.005 || !img) continue;
+    const src = tex[p.tex] ?? tex[0];
+    if (a < 0.005 || !src) continue;
+    const img = tint(src);
     ctx.save();
     ctx.globalAlpha = a;
     ctx.translate(p.x, p.y);

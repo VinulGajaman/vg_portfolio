@@ -132,7 +132,7 @@ const base: MediaSlotDef[] = [
     px: "1200×1800",
     usedIn: "About card",
     required: true,
-    alt: "Vinul Gajaman in profile at night, lit by the warm glow of code on a monitor",
+    alt: "Vinul Gajaman facing the camera, lit by the warm glow of code on a screen, server lights behind him",
   },
   {
     id: "expertise-01",

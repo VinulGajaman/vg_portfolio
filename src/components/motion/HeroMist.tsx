@@ -126,6 +126,13 @@ function ensureTextures() {
   idle(next);
 }
 
+/** The shared smoke textures (filled in idle time; empty until the first one is ready). Also used
+ *  by <CardSmoke>, so the cards carry the same smoke as the hero. */
+export function getSmokeTextures(): HTMLCanvasElement[] {
+  ensureTextures();
+  return texCache;
+}
+
 /* ---------------- fluid warp (GPU) ---------------- */
 
 const VERT = `

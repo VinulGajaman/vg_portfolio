@@ -132,7 +132,7 @@ const base: MediaSlotDef[] = [
     px: "1200×1800",
     usedIn: "About card",
     required: true,
-    alt: "Side portrait of Vinul Gajaman in orange monochrome with a band of light across the eyes",
+    alt: "Vinul Gajaman in profile at night, lit by the warm glow of code on a monitor",
   },
   {
     id: "expertise-01",

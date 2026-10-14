@@ -142,7 +142,7 @@ const base: MediaSlotDef[] = [
     px: "720×840",
     usedIn: "Expertise row 01",
     required: true,
-    alt: "Server rack with glowing cables in a dark room lit orange",
+    alt: "Microservices system design: an API gateway connected to services, a message queue and databases",
   },
   {
     id: "expertise-02",
@@ -152,7 +152,7 @@ const base: MediaSlotDef[] = [
     px: "720×840",
     usedIn: "Expertise row 02",
     required: true,
-    alt: "Hands holding a handheld RFID scanner under orange light",
+    alt: "Three phones showing a mobile app: a dashboard, a scanning screen and a list",
   },
   {
     id: "expertise-03",
@@ -162,7 +162,7 @@ const base: MediaSlotDef[] = [
     px: "720×840",
     usedIn: "Expertise row 03",
     required: true,
-    alt: "Abstract grid of light trails on glass",
+    alt: "An ERP web application with tables and charts on a large screen and a tablet",
   },
   {
     id: "expertise-04",
@@ -172,7 +172,7 @@ const base: MediaSlotDef[] = [
     px: "720×840",
     usedIn: "Expertise row 04",
     required: true,
-    alt: "A phone with a lock glyph drawn in light",
+    alt: "A crypto wallet app with a transaction confirmation, in front of a chain of blocks",
   },
   {
     id: "expertise-05",
@@ -182,7 +182,7 @@ const base: MediaSlotDef[] = [
     px: "720×840",
     usedIn: "Expertise row 05",
     required: true,
-    alt: "Stacked shipping containers crossed by orange light beams",
+    alt: "A Kubernetes cluster with server instances, a deployment pipeline and an AI monitoring panel",
   },
   {
     id: "showreel",

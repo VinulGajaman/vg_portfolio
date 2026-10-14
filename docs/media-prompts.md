@@ -60,16 +60,15 @@ Front portrait, server-room bokeh, lit by a code monitor with faint code reflect
 
 ## 3. Expertise section (5 accordion images, also used as the cursor-preview image)
 
-All five: `.webp` · R · 6:7 · 720×840. These are still lifes with no person, so no reference photo is needed. Each one ends with the style line, minus the portrait wording.
+All five: `.webp` · R · 6:7 (generate 1200×1400). They show the software itself as a cinematic film still that matches the hero (orange backlight, drifting smoke, deep blacks). Paste the shared ending after each scene:
 
-- **`expertise-01.webp` (Backend & Real-Time):** Dark server rack in a black room, bundles of cables glowing with thin orange light pulses, shallow depth of field, moody orange rim lighting, no readable labels.
-- **`expertise-02.webp` (Mobile):** Two hands holding a rugged handheld RFID scanner and a smartphone, screens glowing softly orange, dark background, cinematic close-up, no readable text on screens.
-- **`expertise-03.webp` (Web Platforms):** Abstract grid of light trails reflected on dark glass, like a live dashboard dissolved into light, orange and deep red, minimal.
-- **`expertise-04.webp` (Web3 & Security):** A matte black hardware key next to a phone, a padlock glyph formed by thin orange light lines floating above it, dark surface, macro shot.
-- **`expertise-05.webp` (Cloud, DevOps & AI):** Stacked shipping-container shapes in miniature on a dark surface, crossed by beams of orange light and faint haze, abstract and architectural.
+> *Cinematic film still of a 3D scene, shot on a 35mm anamorphic lens from a slightly low angle: one main subject in sharp focus, everything else falling out of focus into the darkness. The interfaces float in a dark, hazy space; soft orange smoke drifts slowly between them; a warm orange-to-deep-red glow behind the main subject like a stage backlight; crisp orange rim light on the glass edges; soft volumetric light beams through the haze; a subtle anamorphic flare from the brightest screen; fine glowing dust in the air; reflections on a glossy black floor. Interfaces in a dark theme with orange accents. Colour: deep neutral blacks, warm orange and deep red the only colours, high contrast, soft film-like highlight roll-off. Clean image with no grain or noise, interface text tiny and softly blurred so nothing is readable, no logos, no watermark. Vertical 6:7, 1200×1400 px, main subject centred so it still works when cropped to a wide frame.*
 
-Shared ending for these five: *cinematic still life, monochrome orange-to-crimson grade, deep near-black shadows #0D0D0D, shallow depth of field, subtle film grain, no text, no letters, no logos, no watermark.*
-
+- **`expertise-01.webp` (Backend & Real-Time):** Floating translucent glass panels in a dark space, layered in depth. The main panel shows a microservices system-design diagram: an API gateway box at the top connected by glowing orange lines to service boxes (auth, orders, inventory, payments), a message-queue bar in the middle and database cylinders at the bottom, with small bright pulses travelling along the lines. Behind it, a panel with backend code in a dark editor, and a panel with an ERP module map of connected blocks.
+- **`expertise-02.webp` (Mobile):** Three smartphones floating at different angles in a dark space, their screens showing one polished mobile app in a dark theme with orange accents: a home dashboard with rounded cards, a scanning screen with a viewfinder frame, and a list screen with a small offline-sync icon. Soft reflections of the screens on the glossy floor below.
+- **`expertise-03.webp` (Web Platforms):** A large floating browser window showing an ERP web application in a dark theme with orange accents: a left sidebar with menu icons, KPI cards along the top, a data table with filters and pagination, and line and bar charts. In front of it, slightly smaller and angled, the same app in a tablet frame, showing the responsive layout.
+- **`expertise-04.webp` (Web3 & Security):** Floating glass panels showing a crypto wallet app in a dark theme with orange accents: a balance card, a list of tokens with round coin icons, send and receive buttons, and a transaction confirmation with a padlock icon. Behind the panels, a blockchain drawn as a chain of glowing translucent 3D blocks linked by bright orange connections, receding into the darkness.
+- **`expertise-05.webp` (Cloud, DevOps & AI):** A Kubernetes cluster visualised in a dark space: three glowing translucent server instances, each holding a grid of small glowing cubes for containers, some cubes lighting up as they deploy, connected to a central control plane. Around them floating glass panels: a dashboard with CPU and memory graphs for each instance, a deployment pipeline with stages and check marks, and an AI chat panel with a prompt, a response and a small token-usage chart for LLM monitoring.
 ---
 
 ## 4. Selected Work (6 projects)
@@ -82,16 +81,18 @@ Every project gets two files:
 - `work-<slug>-cover.webp` · R · 4:3 · 2400×1800: the card on the home page. Keep the subject in the middle 70%.
 - `work-<slug>-banner.webp` · R · 14:9 · 2800×1800: the top image on the case-study page. Keep the subject in the middle 66% vertically, because it zooms on scroll.
 
-Use the same scene for both and just reframe for the aspect ratio. End each prompt with the still-life ending from section 3.
+Use the same scene for both and just reframe for the aspect ratio.
+
+Shared ending for every cover (paste after each scene): *Real photograph, cinematic, 35mm lens, shallow depth of field, deep neutral blacks, warm orange and amber light only from the light sources in the scene, natural materials, no orange wash over the whole image, clean image with no grain or noise, no people, no text, no letters, no numbers, no logos, no watermark. Landscape 4:3, 2400×1800 px.*
 
 | Slug | Scene prompt |
 |---|---|
-| `aasl-access-control` | Airport security access gate at night, glass turnstiles and a scanning panel glowing orange, long empty terminal corridor behind, reflections on polished floor, cinematic wide shot |
-| `jova-wallet` | A smartphone floating at a slight angle above a dark surface, its screen emitting a soft orange glow with abstract coin-like light orbs rising from it, no readable text |
-| `offline-expense-platform` | Rugged tablet resting on a steel beam at a construction site at dusk, its screen glowing orange, cranes silhouetted against a deep red sky, shallow depth of field |
-| `uhf-rfid-scanner` | Close-up of a rugged handheld UHF RFID scanner in a hand, a thin orange laser-like scan line hitting a small tag, dark industrial background |
-| `techsalary-lk` | Abstract cloud architecture: seven glowing orange cubes connected by thin light lines floating in dark space, isometric, minimal |
-| `ai-chatbot-backend` | Abstract scene of a paper document dissolving into glowing orange particles that reform into chat-bubble shapes, dark background, no readable text |
+| `aasl-access-control` | A secure staff corridor in an airport at night, empty. In the foreground a row of glass security access gates, each with a thin strip of warm orange status light and a small card reader glowing amber. The long corridor behind fades into darkness, with the orange lights reflected on the polished floor. |
+| `jova-wallet` | A smartphone lying at a slight angle on a dark slate surface next to a matte black hardware security key. The phone screen glows warm amber with simple abstract wallet shapes — rounded cards and a few small circles, nothing readable. Soft reflections of the screen on the slate, the rest falling into darkness. |
+| `offline-expense-platform` | A rugged smartphone resting on a raw concrete block at a construction site at dusk, next to a worn hard hat and steel rebar. Its screen glows warm amber with simple abstract list shapes, nothing readable. Out of focus behind: scaffolding and a crane silhouetted against a deep red dusk sky. |
+| `uhf-rfid-scanner` | A gloved hand holding a rugged handheld RFID scanner in a dark warehouse aisle, aimed at stacked shipping crates. A thin warm orange scan beam from the scanner falls across small tags on the crates. The aisle recedes into shadow, lit only by the scanner and a few distant amber lights. |
+| `techsalary-lk` | A dark data-centre aisle in perspective, tall black server racks on both sides, hundreds of tiny amber status lights glowing and blurring into soft bokeh, neat bundles of cables, light haze in the air, the aisle vanishing into darkness. |
+| `ai-chatbot-backend` | An open product manual lying on a dark desk under a single warm spotlight. Tiny glowing amber particles lift off its pages and drift upward, gathering into a soft glowing speech-bubble shape of light floating above the book. Everything else falls into darkness. |
 
 **Optional extras per project (O):**
 - `work-<slug>-hover.webp` (4:3, 2400×1800): a second angle or UI close-up that fades in when the card is hovered.

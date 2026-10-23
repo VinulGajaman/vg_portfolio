@@ -1,7 +1,7 @@
-/** All projects (/work): every project as a smoke-born card, newest first as in the CV. */
+/** All projects (/work): every project as a <WorkCard>, newest first as in the CV. */
 import type { Metadata } from "next";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { SmokeCard } from "@/components/work/SmokeCard";
+import { WorkCard } from "@/components/work/WorkCard";
 import { projects, work } from "@/content/projects";
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default function AllWork() {
         <SectionHeader eyebrow={work.allEyebrow} title={work.allTitle} counter={work.counter} titleId="all-work-title" className="heading-gap" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
           {projects.map((p, i) => (
-            <SmokeCard
+            <WorkCard
               key={p.slug}
               project={p}
               number={String(i + 1).padStart(2, "0")}

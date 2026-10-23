@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Selected Work `#work`: three featured projects whose covers are born from smoke (<SmokeCard>),
+ * Selected Work `#work`: three featured projects (<WorkCard>: blueprint or smoke design),
  * then a button to /work for every project, so the section keeps the same height however many
  * projects there are. Desktop: one large card on the left, two stacked on the right, about one
  * screen tall. Tablet: the large card full width, two side by side. Phone: stacked.
@@ -9,7 +9,7 @@
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Divider } from "@/components/ui/Divider";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { SmokeCard } from "@/components/work/SmokeCard";
+import { WorkCard } from "@/components/work/WorkCard";
 import { featuredProjects, projects, work } from "@/content/projects";
 
 const pad = (i: number) => String(i + 1).padStart(2, "0");
@@ -23,7 +23,7 @@ export default function Work() {
         <Divider variant="solid" draw className="heading-gap mt-[30px] md:mt-10" />
 
         <div className="grid gap-4 md:grid-cols-2 lg:h-[min(720px,calc(100svh-160px))] lg:grid-cols-12 lg:grid-rows-2 lg:gap-5">
-          <SmokeCard
+          <WorkCard
             project={lead}
             number={pad(projects.indexOf(lead))}
             size="lg"
@@ -31,7 +31,7 @@ export default function Work() {
             className="aspect-[4/5] md:col-span-2 md:aspect-[16/9] lg:col-span-7 lg:row-span-2 lg:aspect-auto"
           />
           {rest.map((p) => (
-            <SmokeCard
+            <WorkCard
               key={p.slug}
               project={p}
               number={pad(projects.indexOf(p))}

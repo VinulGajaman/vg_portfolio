@@ -12,13 +12,10 @@ import { useEffect, useRef, useState } from "react";
 import { TransitionLink } from "@/components/motion/TransitionLink";
 import { CardSmoke } from "@/components/motion/CardSmoke";
 import { MediaSlot } from "@/components/ui/MediaSlot";
-import { Tag } from "@/components/ui/Tag";
-import { Decode } from "@/components/ui/Decode";
 import { gsap } from "@/lib/gsap";
 import { useReducedMotion } from "@/lib/hooks";
-import type { Project } from "@/content/projects";
-import { ctaLabels } from "@/content/site";
 import { cn } from "@/lib/cn";
+import { CardText, type ProjectCardProps } from "./CardText";
 
 const MASK = "url(/textures/smoke-mask.webp)";
 /** Three smoke clouds; `--m` grows them from 0% until they cover the card. */
@@ -36,23 +33,10 @@ function setMask(el: HTMLElement, on: boolean) {
   }
 }
 
-export function SmokeCard({
-  project: p,
-  number,
-  size = "sm",
-  sizes = "(min-width: 1024px) 40vw, 100vw",
-  className,
-}: {
-  project: Project;
-  number: string;
-  size?: "lg" | "sm";
-  sizes?: string;
-  className?: string;
-}) {
+export function SmokeCard({ project: p, number, size = "sm", sizes = "(min-width: 1024px) 40vw, 100vw", className }: ProjectCardProps) {
   const ref = useRef<HTMLAnchorElement>(null);
   const reduce = useReducedMotion();
   const [revealed, setRevealed] = useState(false);
-  const shown = revealed || reduce;
 
   useEffect(() => {
     const card = ref.current;
@@ -104,30 +88,7 @@ export function SmokeCard({
       >
         <CardSmoke density={size === "lg" ? 1.6 : 1.3} />
       </div>
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-canvas-deep/95 via-canvas-deep/35 to-transparent" />
-
-      <span className="type-small tabular absolute left-5 top-5 rounded-full border border-white/15 bg-canvas/55 px-3 py-1 text-ink backdrop-blur-md md:left-6 md:top-6">
-        {number}
-      </span>
-
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-5 md:p-8">
-        <div className="flex flex-wrap items-center gap-[6px]">
-          {p.tags.map((t) => (
-            <Tag key={t}>{t}</Tag>
-          ))}
-          <span className="type-number ml-auto text-ink">{p.year}</span>
-        </div>
-        <h3 className={cn(size === "lg" ? "type-h2" : "type-statement", "text-ink transition-opacity duration-500", !shown && "opacity-0")}>
-          <Decode text={p.title} enabled={revealed && !reduce} delay={500} />
-        </h3>
-        {size === "lg" && <p className="type-body max-w-[540px] text-ink-soft max-md:hidden">{p.description}</p>}
-        <span className="type-ui flex items-center gap-2 text-ink">
-          {ctaLabels.project}
-          <svg viewBox="0 0 24 24" aria-hidden className="size-4 text-accent transition-transform duration-500 group-hover:translate-x-1.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </span>
-      </div>
+      <CardText p={p} number={number} size={size} revealed={revealed} reduce={reduce} />
     </TransitionLink>
   );
 }

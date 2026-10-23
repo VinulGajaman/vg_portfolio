@@ -1093,3 +1093,18 @@ html.has-cursor [data-cursor="play"] * {
     transform: scaleX(1);
   }
 }
+
+/* Work blueprint card: the drawing flickers back over the cover on hover */
+@keyframes bp-flicker {
+  0%,
+  40%,
+  70%,
+  100% {
+    opacity: 0.6;
+  }
+  20%,
+  55%,
+  85% {
+    opacity: 0.12;
+  }
+}

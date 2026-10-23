@@ -16,7 +16,7 @@ export function Divider({ variant = "gradient", reverse = false, draw = false, d
       const el = ref.current;
       if (!el || !draw || reduce) return;
       const t = gsap.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 1, ease: "mask", delay, paused: true });
-      onceInView(el, () => t.play(), { start: "top bottom-=10%", settle: () => t.progress(1) });
+      onceInView(el, () => t.play(), { start: "top bottom-=10%", settle: () => t.progress(1), reset: () => t.pause(0) });
     },
     { scope: ref, dependencies: [draw, delay] },
   );

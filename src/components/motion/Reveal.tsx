@@ -91,6 +91,7 @@ export function Reveal<T extends ElementType = "div">({
           start: start ?? (variant === "card-tall" ? "top bottom" : undefined),
           containerAnimation,
           settle: () => tween.progress(1),
+          reset: () => tween.pause(0),
         });
       } else if (trigger === "intro" && introOpen.current) {
         tween.play();

@@ -138,7 +138,7 @@ export function SkillsFlashlight({ className }: { className?: string }) {
         .timeline({ paused: true })
         .to(base, { y: 0, autoAlpha: 1, duration: 0.9, ease: "expo.out", stagger: 0.07 }, 0)
         .to(litGroups, { y: 0, autoAlpha: 1, duration: 0.9, ease: "expo.out", stagger: 0.07 }, 0);
-      const st = onceInView(box, () => intro.play(), { settle: () => intro.progress(1) });
+      const st = onceInView(box, () => intro.play(), { settle: () => intro.progress(1), reset: () => intro.pause(0) });
 
       return () => {
         gsap.ticker.remove(tick);

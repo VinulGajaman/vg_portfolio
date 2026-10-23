@@ -43,7 +43,7 @@ export function Eyebrow({
               paused: true,
             },
           );
-      onceInView(root, () => t.play(), { settle: () => t.progress(1) });
+      onceInView(root, () => t.play(), { settle: () => t.progress(1), reset: () => t.pause(0) });
     },
     { scope: ref, dependencies: [delay, animate] },
   );

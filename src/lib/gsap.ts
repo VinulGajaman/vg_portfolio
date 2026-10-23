@@ -85,9 +85,12 @@ export function isRestoring() {
 }
 
 /**
- * Fires `play` once when the element meets its start, including when a fast scroll skips past
- * it (nothing replays on scroll-up). If the trigger is already passed during a Back/Forward
- * restoration, `settle` runs instead so above-the-fold content never pops.
+ * Fires `play` when the element meets its start, including when a fast scroll skips past it. If
+ * the trigger is already passed during a Back/Forward restoration, `settle` runs instead so
+ * above-the-fold content never pops.
+ * With `reset` (used everywhere, per Vinul: entrance animations replay on every visit), `reset`
+ * rewinds the animation once the element has fully left the screen, in either direction, and
+ * `play` runs again the next time it comes back (scrolling down or up). Without it, it plays once.
  */
 export function onceInView(
   el: Element,
@@ -96,8 +99,48 @@ export function onceInView(
     start?: string | (() => string);
     containerAnimation?: gsap.core.Animation;
     settle?: () => void;
+    reset?: () => void;
   } = {},
 ): ScrollTrigger {
+  if (opts.reset) {
+    const reset = opts.reset;
+    const ca = opts.containerAnimation;
+    let shown = false;
+    const show = (self: ScrollTrigger) => {
+      if (shown) return;
+      shown = true;
+      if (isRestoring() && self.progress === 1 && opts.settle) opts.settle();
+      else play();
+    };
+    const hide = () => {
+      if (!shown) return;
+      shown = false;
+      reset();
+    };
+    const out = ScrollTrigger.create({
+      trigger: el,
+      start: ca ? "left right" : "top bottom",
+      end: ca ? "right left" : "bottom top",
+      containerAnimation: ca,
+      onLeave: hide,
+      onLeaveBack: hide,
+    });
+    const st = ScrollTrigger.create({
+      trigger: el,
+      start: opts.start ?? revealStart(el),
+      end: ca ? "right left" : "bottom top",
+      containerAnimation: ca,
+      onEnter: show,
+      onEnterBack: show,
+    });
+    // One handle for the caller: killing it removes both triggers.
+    const kill = st.kill.bind(st);
+    st.kill = (...args: Parameters<ScrollTrigger["kill"]>) => {
+      out.kill();
+      return kill(...args);
+    };
+    return st;
+  }
   let fired = false;
   const fire = (self: ScrollTrigger) => {
     if (fired) return;

@@ -196,9 +196,10 @@ export function RailPanel({ children, className }: { children: ReactNode; classN
           start: "left 75%",
           containerAnimation: tween,
           settle: () => anim.progress(1),
+          reset: () => anim.pause(0),
         });
       } else {
-        onceInView(el, () => anim.play(), { settle: () => anim.progress(1) });
+        onceInView(el, () => anim.play(), { settle: () => anim.progress(1), reset: () => anim.pause(0) });
       }
     },
     { scope: ref, dependencies: [tween] },

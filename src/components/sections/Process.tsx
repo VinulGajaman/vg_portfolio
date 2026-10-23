@@ -113,6 +113,7 @@ export default function Process() {
         onceInView(row, () => tl.play(), {
           start: isDesktop ? "top top+=240" : "top 75%",
           settle: () => tl.progress(1),
+          reset: () => tl.pause(0),
         });
       });
     },

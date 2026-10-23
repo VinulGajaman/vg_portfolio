@@ -86,7 +86,7 @@ export function CaseBanner({ slug, title }: { slug: string; title: string }) {
     >
       <ScrollZoom from={1.2} parallax className="h-full w-full">
         <MediaSlot
-          id={`work-${slug}-banner`}
+          id={`work-${slug}-cover`}
           fill
           priority
           sizes="(min-width: 1440px) 1400px, calc(100vw - 40px)"

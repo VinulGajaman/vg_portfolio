@@ -7,6 +7,8 @@
  * glowing scan line sweeps across and turns the blueprint into the finished cover behind it, and
  * the title decodes. On hover the blueprint flickers back over the cover. Until a cover exists, the
  * blueprint stays as the card's image (the scan still passes over it).
+ * In the slider (`active` given) the side cards show the blueprint and the scan runs each time a
+ * card becomes the main one. Everything replays whenever the card comes back into view.
  * The card text (number, year, tags, title, CTA) is the shared <CardText>.
  * Reduced motion: the finished card is shown at once.
  */
@@ -147,44 +149,61 @@ const GRID: CSSProperties = {
   backgroundSize: "100% 100%, 100px 100px, 100px 100px, 20px 20px, 20px 20px",
 };
 
-export function BlueprintCard({ project: p, number, size = "sm", sizes = "(min-width: 1024px) 40vw, 100vw", className }: ProjectCardProps) {
+export function BlueprintCard({ project: p, number, size = "sm", sizes = "(min-width: 1024px) 40vw, 100vw", className, active }: ProjectCardProps) {
   const ref = useRef<HTMLAnchorElement>(null);
   const reduce = useReducedMotion();
-  const [revealed, setRevealed] = useState(false);
+  const [inView, setInView] = useState(false);
   const cover = `work-${p.slug}-cover`;
   const hasCover = Boolean(useMedia(cover));
   const kind = KIND[p.slug] ?? "system";
   // The drawing sits above the text: the large card has more room for it.
   const area = size === "lg" ? "bottom-[42%]" : "bottom-[52%]";
+  // In the slider the scan belongs to the main (centre) card; on its own the card scans on entry.
+  const carousel = active !== undefined;
+  const play = inView && (carousel ? active : true);
 
+  // Track visibility every time (not once), so the animation replays whenever the card returns.
+  useEffect(() => {
+    const card = ref.current;
+    if (!card) return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting && e.intersectionRatio >= 0.35), {
+      threshold: [0, 0.35],
+    });
+    io.observe(card);
+    return () => io.disconnect();
+  }, []);
+
+  // Play: (the lines draw, standalone only) then the scan line sweeps and turns the blueprint into
+  // the cover. Stop: fold back to the blueprint so the next entry plays it again.
   useEffect(() => {
     const card = ref.current;
     const scan = card?.querySelector<HTMLElement>("[data-bp-scan]");
     if (!card || !scan || reduce) return;
     const lines = card.querySelectorAll<SVGPathElement>("[data-bp-line]");
-    gsap.set(lines, { strokeDasharray: 1, strokeDashoffset: 1 });
-    card.style.setProperty("--p", "0");
-    let tl: gsap.core.Timeline | null = null;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting) return;
-        io.disconnect();
-        setRevealed(true);
-        tl = gsap
-          .timeline()
-          .to(lines, { strokeDashoffset: 0, duration: 1.3, ease: "power2.inOut", stagger: { amount: 0.7 } }, 0)
-          .to(scan, { autoAlpha: 1, duration: 0.2 }, 1.5)
-          .to(card, { "--p": 100, duration: 1.7, ease: "power2.inOut" }, 1.5)
-          .to(scan, { autoAlpha: 0, duration: 0.35 }, 3.0);
-      },
-      { threshold: 0.35 },
-    );
-    io.observe(card);
+    gsap.killTweensOf([card, scan, ...lines]);
+    if (!play) {
+      gsap.set(scan, { autoAlpha: 0 });
+      if (carousel) gsap.to(card, { "--p": 0, duration: 0.6, ease: "power2.inOut" });
+      else {
+        card.style.setProperty("--p", "0");
+        gsap.set(lines, { strokeDasharray: 1, strokeDashoffset: 1 });
+      }
+      return;
+    }
+    const tl = gsap.timeline({ delay: carousel ? 0.35 : 0 });
+    let at = 0;
+    if (!carousel) {
+      tl.fromTo(lines, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.3, ease: "power2.inOut", stagger: { amount: 0.7 } }, 0);
+      at = 1.5;
+    }
+    tl.set(card, { "--p": 0 }, 0)
+      .to(scan, { autoAlpha: 1, duration: 0.2 }, at)
+      .to(card, { "--p": 100, duration: carousel ? 1.3 : 1.7, ease: "power2.inOut" }, at)
+      .to(scan, { autoAlpha: 0, duration: 0.35 }, at + (carousel ? 1.15 : 1.5));
     return () => {
-      io.disconnect();
-      tl?.kill();
+      tl.kill();
     };
-  }, [reduce]);
+  }, [play, carousel, reduce]);
 
   return (
     <TransitionLink
@@ -237,7 +256,7 @@ export function BlueprintCard({ project: p, number, size = "sm", sizes = "(min-w
         }}
       />
 
-      <CardText p={p} number={number} size={size} revealed={revealed} reduce={reduce} />
+      <CardText p={p} number={number} size={size} revealed={inView} reduce={reduce} />
     </TransitionLink>
   );
 }

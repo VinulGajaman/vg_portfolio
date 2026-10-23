@@ -141,7 +141,7 @@ export default function Contact() {
           clearProps: "transform",
         },
       );
-      onceInView(card, () => t.play(), { settle: () => t.progress(1) });
+      onceInView(card, () => t.play(), { settle: () => t.progress(1), reset: () => t.pause(0) });
     },
     { scope: sectionRef, dependencies: [photo] },
   );

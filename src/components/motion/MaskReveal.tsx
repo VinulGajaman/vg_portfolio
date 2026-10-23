@@ -67,7 +67,7 @@ export function MaskReveal({
       }
       tlRef.current = tl;
       if (trigger === "mount") tl.play();
-      else if (trigger === "inview") st = onceInView(el, () => tl.play(), { settle: () => tl.progress(1) });
+      else if (trigger === "inview") st = onceInView(el, () => tl.play(), { settle: () => tl.progress(1), reset: () => tl.pause(0) });
       else if (introOpen.current) tl.play();
       return () => st?.kill();
     },

@@ -22,6 +22,8 @@ export type ProjectCardProps = {
   size?: CardSize;
   sizes?: string;
   className?: string;
+  /** In the slider: whether this is the main (centre) card. */
+  active?: boolean;
 };
 
 export function CardText({

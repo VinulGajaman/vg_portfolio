@@ -105,7 +105,7 @@ export default function Experience() {
           paused: true,
         },
       );
-      onceInView(shell, () => t.play(), { start: "top 75%", settle: () => t.progress(1) });
+      onceInView(shell, () => t.play(), { start: "top 75%", settle: () => t.progress(1), reset: () => t.pause(0) });
     },
     { scope: shellRef },
   );

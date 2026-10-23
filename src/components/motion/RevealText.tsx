@@ -96,6 +96,10 @@ export function RevealText({
               playedRef.current = true;
               tween.progress(1);
             },
+            reset: () => {
+              playedRef.current = false;
+              tween.pause(0);
+            },
           });
         } else if (trigger === "intro" && introOpen.current) go();
         else if (trigger === "manual" && play) go();
@@ -210,10 +214,15 @@ export function RevealText({
     }
   });
 
+  // Manual: play when `play` turns on; rewind when it turns off, so it can play again.
   useEffect(() => {
-    if (trigger === "manual" && play && !playedRef.current && tweenRef.current) {
+    if (trigger !== "manual" || !tweenRef.current) return;
+    if (play && !playedRef.current) {
       playedRef.current = true;
       tweenRef.current.play();
+    } else if (!play && playedRef.current) {
+      playedRef.current = false;
+      tweenRef.current.pause(0);
     }
   }, [trigger, play]);
 

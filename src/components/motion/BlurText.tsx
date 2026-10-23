@@ -72,7 +72,13 @@ export function BlurText({
       if (played.current) tween.progress(1);
       else if (trigger === "mount") go();
       else if (trigger === "inview")
-        st = onceInView(el, go, { settle: () => tween.progress(1) });
+        st = onceInView(el, go, {
+          settle: () => tween.progress(1),
+          reset: () => {
+            played.current = false;
+            tween.pause(0);
+          },
+        });
       else if (trigger === "intro" && introOpen.current) go();
       else if (trigger === "manual" && play) go();
       return () => st?.kill();

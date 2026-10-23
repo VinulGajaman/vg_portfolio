@@ -7,7 +7,7 @@
  *   frame scale .2 → 1, inner media scale 1.8 → 1 (net .36 → 1),
  *   left label x −83.33vw → 0, right label x +83.33vw → 0,
  *   frame clip-path inset(0 round 20px) → inset(0 round 12px);
- * 0.85 → 1 holds (dwell). Label chars play <RevealText chars> once at progress 0.1.
+ * 0.85 → 1 holds (dwell). Label chars play <RevealText chars> at progress 0.1 (again on every pass).
  * Video: brightness(.7) (a static 30% black layer), plays only while the stage is in view; the frame is a button that
  * toggles play/pause (cursor "play"). The stage and labels ignore the pointer.
  * Reduced motion: no pin, static full-size frame (radius 20), labels above and below, no
@@ -88,7 +88,10 @@ export function PinnedZoom({
           scrub: SCRUB,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
+            // Labels reveal at 0.1 and rewind when the section is scrolled back to its start,
+            // so they play again on the next pass.
             if (self.progress >= 0.1) setCharsOn(true);
+            else if (self.progress < 0.02) setCharsOn(false);
           },
           onToggle: (self) => {
             const wc = self.isActive ? "transform" : "";

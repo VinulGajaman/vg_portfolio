@@ -6,7 +6,6 @@ import { getMediaMap } from "@/lib/media.server";
 import { CaseBanner, CaseHero } from "@/components/work/CaseHero";
 import { MetaRow } from "@/components/work/MetaRow";
 import { Article } from "@/components/work/Article";
-import { Gallery } from "@/components/work/Gallery";
 import { PrevNext } from "@/components/work/PrevNext";
 import { NextProject } from "@/components/work/NextProject";
 
@@ -20,7 +19,7 @@ export async function generateMetadata({ params }: PageProps<"/work/[slug]">): P
   const { slug } = await params;
   const p = getProject(slug);
   if (!p) return {};
-  const banner = getMediaMap()[`work-${slug}-banner`];
+  const banner = getMediaMap()[`work-${slug}-cover`];
   // The root layout's title template appends " | Vinul Gajaman".
   return {
     title: p.title,
@@ -55,7 +54,6 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
         />
         <CaseBanner slug={p.slug} title={p.title} />
         <Article project={p} />
-        <Gallery slug={p.slug} />
         <PrevNext prev={prev} next={next} />
         <NextProject project={next} />
       </div>

@@ -108,6 +108,10 @@ export function Counter({
             played.current = true;
             tween.progress(1);
           },
+          reset: () => {
+            played.current = false;
+            tween.pause(0);
+          },
         });
       } else if (play) go();
       return () => {

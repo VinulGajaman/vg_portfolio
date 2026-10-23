@@ -49,8 +49,18 @@ export function SmokeCard({ project: p, number, size = "sm", sizes = "(min-width
     let tl: gsap.core.Timeline | null = null;
     const io = new IntersectionObserver(
       ([e]) => {
-        if (!e.isIntersecting) return;
-        io.disconnect();
+        if (!e.isIntersecting) {
+          // Fully out of view: back to smoke, so it is born again on the next visit.
+          if (e.intersectionRatio === 0 && tl) {
+            tl.kill();
+            tl = null;
+            setRevealed(false);
+            setMask(media, true);
+            gsap.set(veil, { opacity: 1 });
+          }
+          return;
+        }
+        if (tl || e.intersectionRatio < 0.35) return;
         setRevealed(true);
         tl = gsap
           .timeline()
@@ -58,7 +68,7 @@ export function SmokeCard({ project: p, number, size = "sm", sizes = "(min-width
           .call(() => setMask(media, false))
           .to(veil, { opacity: rest, duration: 2.4, ease: "power2.out", clearProps: "opacity" }, 0.7);
       },
-      { threshold: 0.35 },
+      { threshold: [0, 0.35] },
     );
     io.observe(card);
     return () => {

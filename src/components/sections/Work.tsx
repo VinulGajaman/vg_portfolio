@@ -169,6 +169,7 @@ export default function Work() {
                 <WorkCard
                   project={p}
                   number={pad(wrap(k))}
+                  active={off === 0}
                   sizes="(min-width: 1024px) 470px, (min-width: 768px) 44vw, 72vw"
                   className="h-full w-full"
                 />

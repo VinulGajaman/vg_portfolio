@@ -77,11 +77,7 @@ All five: `.webp` · R · 6:7 (generate 1200×1400). They show the software itse
 
 The 6 slugs are `aasl-access-control`, `jova-wallet`, `offline-expense-platform`, `uhf-rfid-scanner`, `techsalary-lk` and `ai-chatbot-backend`.
 
-Every project gets two files:
-- `work-<slug>-cover.webp` · R · 4:3 · 2400×1800: the card on the home page. Keep the subject in the middle 70%.
-- `work-<slug>-banner.webp` · R · 14:9 · 2800×1800: the top image on the case-study page. Keep the subject in the middle 66% vertically, because it zooms on scroll.
-
-Use the same scene for both and just reframe for the aspect ratio.
+Every project has **one image**, `work-<slug>-cover.webp` · R · 4:3 · 2400×1800. It is used for the card (home slider and /work) and as the banner on the case-study page. Keep the subject in the middle 70%.
 
 Shared ending for every cover (paste after each scene):
 
@@ -95,12 +91,6 @@ Shared ending for every cover (paste after each scene):
 | `uhf-rfid-scanner` | A rugged Android handheld scanner floating at an angle, its screen showing a list of scanned items being added; from its head, thin rings of orange radio waves radiate outward and touch small glowing RFID tags on a stack of crates in the haze behind. |
 | `techsalary-lk` | A cloud-native platform visualised in a dark space: seven glowing translucent service blocks arranged in a Kubernetes cluster around a central control plane, connected by orange lines with travelling pulses; in front, a floating dashboard panel with salary charts and bar graphs. |
 | `ai-chatbot-backend` | A floating chat interface panel answering a question, in front of a stream of product-manual PDF pages that dissolve into small glowing orange text fragments, flowing into a glowing vector-database cylinder and back to the chat as the answer. |
-
-**Optional extras per project (O):**
-- `work-<slug>-hover.webp` (4:3, 2400×1800): a second angle or UI close-up that fades in when the card is hovered.
-- `work-<slug>-gallery-01.webp` and `-02.webp` (5:4, 1600×1280): detail shots for the case-study page.
-- `work-<slug>-gallery-03.webp` (7:4, 2800×1600): a wide context shot.
-- `work-<slug>-preview.mp4` (4:3, 1600×1200, 4–6s): a slow screen-recording pan of the real app that plays on hover. A screen recording of the real app works best here.
 
 ---
 
@@ -154,7 +144,6 @@ If you only have time for some of these, do them in this order:
 3. The 6 `work-*-cover` images
 4. `showreel.mp4`
 5. `contact-bg` + `contact-bg-mobile`
-6. The 6 `work-*-banner` images
 7. `expertise-01…05`
 8. `hero-thumb-01…03` and `og-image`
 9. Everything optional

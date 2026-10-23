@@ -7,6 +7,7 @@
  * glowing scan line sweeps across and turns the blueprint into the finished cover behind it, and
  * the title decodes. On hover the blueprint flickers back over the cover. Until a cover exists, the
  * blueprint stays as the card's image (the scan still passes over it).
+ * The card text (number, year, tags, title, CTA) is the shared <CardText>.
  * Reduced motion: the finished card is shown at once.
  */
 import { useEffect, useRef, useState, type CSSProperties } from "react";
@@ -204,25 +205,22 @@ export function BlueprintCard({ project: p, number, size = "sm", sizes = "(min-w
         </div>
       )}
 
-      {/* The blueprint: grid, drawing and a drawing number */}
+      {/* The blueprint: grid and drawing */}
       <div
         aria-hidden
         className={cn("absolute inset-0 transition-opacity duration-500", !hasCover && "opacity-80 pointer-fine:group-hover:opacity-100")}
         style={{ ...GRID, ...(hasCover ? { clipPath: "inset(0 0 0 calc(var(--p) * 1%))" } : null) }}
       >
-        <div className={cn("absolute inset-x-6 top-14 text-accent md:inset-x-10 md:top-16", area)}>
+        <div className={cn("absolute inset-x-6 top-16 text-accent md:inset-x-10 md:top-20", area)}>
           <Drawing kind={kind} reveal />
         </div>
-        <span className="type-micro tabular absolute right-5 top-6 text-accent/70 md:right-6">
-          DWG-{number} · REV {p.year}
-        </span>
       </div>
 
       {/* Hover: the blueprint flickers back over the cover */}
       {hasCover && (
         <div
           aria-hidden
-          className={cn(area, "pointer-events-none absolute inset-x-6 top-14 text-accent opacity-0 mix-blend-screen transition-opacity duration-300 md:inset-x-10 md:top-16 pointer-fine:group-hover:animate-[bp-flicker_0.6s_steps(1)_1] pointer-fine:group-hover:opacity-60")}
+          className={cn(area, "pointer-events-none absolute inset-x-6 top-16 text-accent opacity-0 mix-blend-screen transition-opacity duration-300 md:inset-x-10 md:top-20 pointer-fine:group-hover:animate-[bp-flicker_0.6s_steps(1)_1] pointer-fine:group-hover:opacity-60")}
         >
           <Drawing kind={kind} />
         </div>

@@ -89,8 +89,10 @@ export function isRestoring() {
  * the trigger is already passed during a Back/Forward restoration, `settle` runs instead so
  * above-the-fold content never pops.
  * With `reset` (used everywhere, per Vinul: entrance animations replay on every visit), `reset`
- * rewinds the animation once the element has fully left the screen, in either direction, and
- * `play` runs again the next time it comes back (scrolling down or up). Without it, it plays once.
+ * rewinds the animation once the element's whole section has left the screen, in either
+ * direction, and `play` runs again the next time the section comes back (scrolling down or up).
+ * The section, not the element, decides: sticky headers and cards (Process) stay on screen long
+ * after their place in the flow has scrolled away. Without `reset`, it plays once.
  */
 export function onceInView(
   el: Element,
@@ -105,6 +107,7 @@ export function onceInView(
   if (opts.reset) {
     const reset = opts.reset;
     const ca = opts.containerAnimation;
+    const section = ca ? el : (el.closest("section, footer") ?? el);
     let shown = false;
     const show = (self: ScrollTrigger) => {
       if (shown) return;
@@ -118,7 +121,7 @@ export function onceInView(
       reset();
     };
     const out = ScrollTrigger.create({
-      trigger: el,
+      trigger: section,
       start: ca ? "left right" : "top bottom",
       end: ca ? "right left" : "bottom top",
       containerAnimation: ca,
@@ -128,6 +131,7 @@ export function onceInView(
     const st = ScrollTrigger.create({
       trigger: el,
       start: opts.start ?? revealStart(el),
+      endTrigger: section,
       end: ca ? "right left" : "bottom top",
       containerAnimation: ca,
       onEnter: show,

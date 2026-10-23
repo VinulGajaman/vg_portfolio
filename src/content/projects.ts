@@ -262,8 +262,15 @@ export function getNeighbours(slug: string): { prev: Project; next: Project } {
   return { prev: projects[(i - 1 + n) % n], next: projects[(i + 1) % n] };
 }
 
+/** Projects featured on the home page; the rest are on /work. */
+export const featuredSlugs = ["aasl-access-control", "jova-wallet", "offline-expense-platform"] as const;
+export const featuredProjects = featuredSlugs.map((s) => projects.find((p) => p.slug === s)!);
+
 export const work = {
   eyebrow: "Selected Work",
   title: ["SYSTEMS BUILT", "FOR PRODUCTION"],
   counter: `${projects.length} Projects`,
+  viewAll: "View All Projects",
+  allTitle: ["ALL", "PROJECTS"],
+  allEyebrow: "Work",
 } as const;

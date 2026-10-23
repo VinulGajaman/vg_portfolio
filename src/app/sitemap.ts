@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = site.siteUrl.replace(/\/$/, "");
   return [
     { url: `${base}/`, changeFrequency: "monthly", priority: 1 },
+    { url: `${base}/work/`, changeFrequency: "monthly", priority: 0.9 },
     ...projectSlugs.map((s) => ({ url: `${base}/work/${s}/`, changeFrequency: "yearly" as const, priority: 0.8 })),
   ];
 }

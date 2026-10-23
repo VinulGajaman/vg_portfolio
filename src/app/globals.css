@@ -1108,3 +1108,10 @@ html.has-cursor [data-cursor="play"] * {
     opacity: 0.12;
   }
 }
+
+/* Work status card: the heartbeat strip slides left by one half for a seamless loop */
+@keyframes status-beat {
+  to {
+    transform: translateX(-50%);
+  }
+}
